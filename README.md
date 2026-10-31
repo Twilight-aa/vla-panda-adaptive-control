@@ -74,6 +74,7 @@ run_local_baseline(0.001, 'local_baseline_dt1ms')
 - `docs/公平调参与接触实验结果.md`：接触审计、96 开发、126 独立跟踪、27 噪声、45 接触回合和夹爪容量。
 - `docs/抓取扩展与阶段检测.md`：6 种子扩展、4 s 慢抬升、oracle 对中、夹爪力灵敏度和阶段检测器验证。
 - `docs/夹爪力校准对照报告.md`：1× 原始夹爪与 1.5× 校准夹爪的 90 回合对照、视频和连续指标。
+- `docs/远程LIBERO基线结果.md`：OpenVLA-OFT 在 LIBERO-Spatial 的 500 回合远程基线（493/500，98.6%）及后续 GPU 需求。
 - `python/controllers.py`：CTC / SMC / RBF-SMC 共享实现。
 - `python/tune_controllers.py` / `python/test_observation_noise.py`：支持 `--out` 的开发与独立测试。
 - `python/grasp_transport.py`：抓取任务，支持 `--batch --video --out --seeds --lift-duration`。
