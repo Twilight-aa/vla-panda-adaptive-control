@@ -1,0 +1,31 @@
+{
+  "method": "RBF_SMC",
+  "scenario": "slippery",
+  "seed": 32,
+  "success": false,
+  "lifted": false,
+  "dropped": false,
+  "failure_phase": "grasp_or_lift",
+  "final_xy_error_m": 0.1855419649190665,
+  "max_object_height_m": 0.3751603963101382,
+  "peak_contact_force_N": 1.5487706619922426,
+  "saturation_fraction": 0.0,
+  "warning_count": 0,
+  "transport_bilateral_contact_fraction": 0.0,
+  "transport_relative_motion_m": 0.18680104452092533,
+  "final_tilt_deg": 2.4148365394514667e-06,
+  "effective_finger_friction_min": 0.35,
+  "object_mass_kg": 0.1,
+  "z_offset_m": 0.0,
+  "phase_peak_contact_force": {
+    "approach": 0.2667381553159427,
+    "descend": 0.24525000235005118,
+    "close": 0.7652442685984074,
+    "lift": 1.5487706619922426,
+    "transport": 0.2452500023489227,
+    "lower": 0.2452500023504604,
+    "release": 0.2452500023503412,
+    "retreat": 0.24525000235022118,
+    "settle": 0.24525000235010158
+  }
+}

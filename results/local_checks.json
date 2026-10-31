@@ -1,0 +1,10 @@
+{
+  "panda_completed_unique_runs_across_two_references": 120,
+  "panda_min_inertia_eigenvalue": 0.1065842591943086,
+  "coriolis_polarization_error": 1.1831017068808514e-11,
+  "independent_nominal_model": true,
+  "torque_actuator_configuration": true,
+  "matlab_completed_unique_runs": 240,
+  "matlab_weights_within_cap": true,
+  "frozen_warmup_matches_online": true
+}

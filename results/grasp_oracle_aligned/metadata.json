@@ -1,0 +1,27 @@
+{
+  "seeds": [
+    31,
+    32,
+    33,
+    34,
+    35,
+    36
+  ],
+  "scenarios": [
+    "nominal",
+    "heavy",
+    "slippery",
+    "pulse",
+    "low_friction"
+  ],
+  "methods": [
+    "CTC",
+    "SMC",
+    "RBF_SMC"
+  ],
+  "runs": 90,
+  "source_sha256": "f0398100ce8682ab2e7094fb365a6171ecec528b8ef2ebb343c258acc4133275",
+  "lift_duration_s": 2.0,
+  "align_object": true,
+  "note": "oracle uses true object offset for diagnosis; not deployable"
+}

@@ -1,0 +1,7 @@
+{
+  "mujoco": "3.17.0",
+  "python": "3.14.9",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "script_sha256": "d0953c99fca2dadc268e6d3ed9e294812397fcdf87dd75b256b393e9d2b164da",
+  "note": "Local Menagerie Panda, not LIBERO; fixed joint trajectory, no grasp or VLA."
+}

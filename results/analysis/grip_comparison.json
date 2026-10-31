@@ -1,0 +1,102 @@
+{
+  "nominal": {
+    "base_success": 18,
+    "base_n": 18,
+    "base_ci": [
+      0.8241154494176252,
+      1.0
+    ],
+    "cal_success": 18,
+    "cal_n": 18,
+    "cal_ci": [
+      0.8241154494176252,
+      1.0
+    ],
+    "base_final_xy_mm": 0.6520766254590212,
+    "cal_final_xy_mm": 1.1746336730799505,
+    "base_peak_force_N": 2.0482789155710517,
+    "cal_peak_force_N": 2.173438584995912,
+    "base_max_height_m": 0.500124213999383,
+    "cal_max_height_m": 0.5007643438254133
+  },
+  "heavy": {
+    "base_success": 0,
+    "base_n": 18,
+    "base_ci": [
+      0.0,
+      0.1758845505823749
+    ],
+    "cal_success": 18,
+    "cal_n": 18,
+    "cal_ci": [
+      0.8241154494176252,
+      1.0
+    ],
+    "base_final_xy_mm": null,
+    "cal_final_xy_mm": 1.136086196377748,
+    "base_peak_force_N": null,
+    "cal_peak_force_N": 4.726996858928388,
+    "base_max_height_m": null,
+    "cal_max_height_m": 0.4967715646112861
+  },
+  "slippery": {
+    "base_success": 0,
+    "base_n": 18,
+    "base_ci": [
+      0.0,
+      0.1758845505823749
+    ],
+    "cal_success": 18,
+    "cal_n": 18,
+    "cal_ci": [
+      0.8241154494176252,
+      1.0
+    ],
+    "base_final_xy_mm": null,
+    "cal_final_xy_mm": 1.1520560254799674,
+    "base_peak_force_N": null,
+    "cal_peak_force_N": 2.182576841528338,
+    "base_max_height_m": null,
+    "cal_max_height_m": 0.49926182610147257
+  },
+  "pulse": {
+    "base_success": 18,
+    "base_n": 18,
+    "base_ci": [
+      0.8241154494176252,
+      1.0
+    ],
+    "cal_success": 18,
+    "cal_n": 18,
+    "cal_ci": [
+      0.8241154494176252,
+      1.0
+    ],
+    "base_final_xy_mm": 0.624995953193068,
+    "cal_final_xy_mm": 1.196284975951133,
+    "base_peak_force_N": 1.9955764283422148,
+    "cal_peak_force_N": 2.2954850399693907,
+    "base_max_height_m": 0.5001538594414678,
+    "cal_max_height_m": 0.5008393511571276
+  },
+  "low_friction": {
+    "base_success": 0,
+    "base_n": 18,
+    "base_ci": [
+      0.0,
+      0.1758845505823749
+    ],
+    "cal_success": 0,
+    "cal_n": 18,
+    "cal_ci": [
+      0.0,
+      0.1758845505823749
+    ],
+    "base_final_xy_mm": null,
+    "cal_final_xy_mm": null,
+    "base_peak_force_N": null,
+    "cal_peak_force_N": null,
+    "base_max_height_m": null,
+    "cal_max_height_m": null
+  }
+}

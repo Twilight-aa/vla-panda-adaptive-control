@@ -1,0 +1,58 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# macOS / external disk metadata
+.DS_Store
+._*
+*.AppleDouble
+
+# MATLAB
+*.asv
+*.m~
+slprj/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Third-party models have their own Git repository and license.
+vendor/
+
+# Logs
+*.log
+
+# Results: large per-run artifacts are regenerable; track summaries/configs/checks.
+results/**/*.npz
+results/**/*.mp4
+results/**/*.mat
+results/**/*.png
+results/**/*.csv
+!results/**/summary.csv
+!results/fair_tuning/*.csv
+!results/fair_tuning_v1_original/*.csv
+!results/fair_tuning_v2/*.csv
+!results/gripper_bench/pull_sweep.csv
+
+# Very large diagnostic dumps and one-off height sweeps.
+results/grasp_diagnostics/
+results/grasp_sweeps/
+
+# Keep the key figures referenced by the reports.
+!results/analysis/contact_audit_v1_v2.png
+!results/analysis/grip_success_comparison.png
+!results/gripper_bench/capacity_vs_friction.png
+!results/grasp_transport/contact_comparison.png
+!results/grasp_transport_grip15/heavy_height_comparison.png
+!results/grasp_transport_grip15/slippery_height_comparison.png
+!results/grasp_transport_grip15/low_friction_height_comparison.png
+
+# AppleDouble sidecars must never be re-included by result negations.
+results/**/._*
+**/._*
+._*

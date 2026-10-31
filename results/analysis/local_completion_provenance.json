@@ -1,0 +1,55 @@
+{
+  "source_sha256": {
+    "controllers.py": "72c9fd5973971f753644e6263d20a433f6253fcdd3dc5e09be2cd207d3a03af0",
+    "run_panda_local.py": "f72d948cfcc2af2ec407a450979e12f8aae34e4fb1f65215a77aa08063175dbd",
+    "grasp_transport.py": "fa41b142ba3f876ee0b9a32171bf1b0cd6221104b7ef257e55a349db88b4a2b9",
+    "tune_controllers.py": "f89bb637bdcfe73a7c64633183de5b24c73a2771f39139a732a29db02f51ae57",
+    "test_observation_noise.py": "5ef0aa9fc8b22171b4c0b97303e7c6ee736764540a8e1c8b8a77f63ba2361b06",
+    "test_controller_regression.py": "ace80854c5ac7a5cfca0162cda7beef6308cbfa1b4f95ded41765a8d2925af95",
+    "gripper_hold_test.py": "3e49e4f47caeb025061eb76fc6784b0df7fa1e01c7b72bb93e27b164c68a0613",
+    "diagnose_contacts.py": "46d046b7026b08e34d9dd7a63c4e55ab696d873332b34b3b17a9f35d6d6fe43a",
+    "diagnose_grasp.py": "8e1f9266f102b7bc658208db928e6a28e1668b67841207ca6cbafa2c1fd0bf55",
+    "analyze_extended_grasp.py": "1aa468de99dcd0589ea9efc4fc30a4b1e743b35a7ee9ccf54cece46a892ef861",
+    "report_grip_comparison.py": "a38f6ee752bda721fef8ccdbd42508a13606dc967325a663e252f8bc65812cf6",
+    "report_contact_stage.py": "61da6970626303cae554f21264d4d09375f0d5a08ed68adfe809d8df27297041"
+  },
+  "selected_config": {
+    "CTC": {
+      "ctc_kp": 900.0,
+      "ctc_kd": 66.0
+    },
+    "SMC": {
+      "ks_scale": 2.097730804583551,
+      "rho_scale": 1.8863353446096132,
+      "phi": 0.1440711967649831,
+      "lambda": 10.443604026840287
+    },
+    "RBF_SMC": {
+      "ks_scale": 1.4807135020965756,
+      "rho_scale": 1.6972306532273107,
+      "phi": 0.21404299603288485,
+      "lambda": 13.624580208104906,
+      "gamma": 11.921735800429415
+    }
+  },
+  "datasets": {
+    "fair_tuning_v2": "clean rerun after setup fix; 96 dev + 126 held-out + 27 noise",
+    "fair_tuning_v1_original": "pre-audit archive; contact rows present only in payload scenarios",
+    "grasp_transport": "45 runs with shared controller, same physics as archived batch",
+    "grasp_transport_v1_original": "pre-refactor archive, bit-identical metrics",
+    "grasp_transport_ext": "six-seed default-lift batch with phase detector fields",
+    "grasp_slow_lift_ext": "six-seed 4 s slow-lift control",
+    "grasp_oracle_aligned": "six-seed oracle object-centering diagnostic (not deployable)",
+    "grasp_grip15_ext": "six-seed 1.5x gripper-force diagnostic",
+    "grasp_transport_grip15": "formal six-seed 1.5x gripper-force batch with video",
+    "grasp_grip40_low": "4x gripper-force low-friction diagnostic",
+    "gripper_bench": "independent pull-hold capacity sweep"
+  },
+  "formal_contact_platform": {
+    "path": "results/grasp_transport_grip15",
+    "gripper_force_scale": 1.5,
+    "decision_date": "2026-10-31",
+    "original_model_sensitivity": "results/grasp_transport_ext"
+  },
+  "regression_check": "python/test_controller_regression.py"
+}

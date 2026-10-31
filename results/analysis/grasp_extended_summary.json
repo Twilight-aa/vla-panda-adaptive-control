@@ -1,0 +1,302 @@
+{
+  "default_lift": {
+    "nominal": {
+      "success": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "drop": 0,
+      "drop_time_mean": -1.0,
+      "drop_time_min": -1.0,
+      "drop_time_max": -1.0
+    },
+    "heavy": {
+      "success": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci": [
+        0.0,
+        0.1758845505823749
+      ],
+      "drop": 18,
+      "drop_time_mean": 5.632888888888889,
+      "drop_time_min": 5.586,
+      "drop_time_max": 5.726
+    },
+    "slippery": {
+      "success": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci": [
+        0.0,
+        0.1758845505823749
+      ],
+      "drop": 18,
+      "drop_time_mean": 5.537055555555556,
+      "drop_time_min": 5.533,
+      "drop_time_max": 5.543
+    },
+    "pulse": {
+      "success": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "drop": 0,
+      "drop_time_mean": -1.0,
+      "drop_time_min": -1.0,
+      "drop_time_max": -1.0
+    },
+    "low_friction": {
+      "success": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci": [
+        0.0,
+        0.1758845505823749
+      ],
+      "drop": 18,
+      "drop_time_mean": 5.533666666666667,
+      "drop_time_min": 5.532,
+      "drop_time_max": 5.539
+    }
+  },
+  "slow_lift_4s": {
+    "nominal": {
+      "success": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "drop": 0,
+      "drop_time_mean": -1.0,
+      "drop_time_min": -1.0,
+      "drop_time_max": -1.0
+    },
+    "heavy": {
+      "success": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci": [
+        0.0,
+        0.1758845505823749
+      ],
+      "drop": 18,
+      "drop_time_mean": 6.514444444444445,
+      "drop_time_min": 6.175,
+      "drop_time_max": 7.279
+    },
+    "slippery": {
+      "success": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci": [
+        0.0,
+        0.1758845505823749
+      ],
+      "drop": 18,
+      "drop_time_mean": 6.071944444444444,
+      "drop_time_min": 6.064,
+      "drop_time_max": 6.082
+    },
+    "pulse": {
+      "success": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "drop": 0,
+      "drop_time_mean": -1.0,
+      "drop_time_min": -1.0,
+      "drop_time_max": -1.0
+    },
+    "low_friction": {
+      "success": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci": [
+        0.0,
+        0.1758845505823749
+      ],
+      "drop": 18,
+      "drop_time_mean": 6.065833333333334,
+      "drop_time_min": 6.063,
+      "drop_time_max": 6.074
+    }
+  },
+  "oracle_aligned": {
+    "nominal": {
+      "success": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "drop": 0,
+      "drop_time_mean": -1.0,
+      "drop_time_min": -1.0,
+      "drop_time_max": -1.0
+    },
+    "heavy": {
+      "success": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci": [
+        0.0,
+        0.1758845505823749
+      ],
+      "drop": 18,
+      "drop_time_mean": 5.700500000000001,
+      "drop_time_min": 5.572,
+      "drop_time_max": 5.7940000000000005
+    },
+    "slippery": {
+      "success": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci": [
+        0.0,
+        0.1758845505823749
+      ],
+      "drop": 18,
+      "drop_time_mean": 5.538444444444445,
+      "drop_time_min": 5.534,
+      "drop_time_max": 5.542
+    },
+    "pulse": {
+      "success": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "drop": 0,
+      "drop_time_mean": -1.0,
+      "drop_time_min": -1.0,
+      "drop_time_max": -1.0
+    },
+    "low_friction": {
+      "success": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci": [
+        0.0,
+        0.1758845505823749
+      ],
+      "drop": 18,
+      "drop_time_mean": 5.535,
+      "drop_time_min": 5.533,
+      "drop_time_max": 5.5360000000000005
+    }
+  },
+  "grip_scale_1_5": {
+    "nominal": {
+      "success": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "drop": 0,
+      "drop_time_mean": -1.0,
+      "drop_time_min": -1.0,
+      "drop_time_max": -1.0
+    },
+    "heavy": {
+      "success": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "drop": 0,
+      "drop_time_mean": -1.0,
+      "drop_time_min": -1.0,
+      "drop_time_max": -1.0
+    },
+    "slippery": {
+      "success": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "drop": 0,
+      "drop_time_mean": -1.0,
+      "drop_time_min": -1.0,
+      "drop_time_max": -1.0
+    },
+    "pulse": {
+      "success": 18,
+      "n": 18,
+      "rate": 1.0,
+      "ci": [
+        0.8241154494176252,
+        1.0
+      ],
+      "drop": 0,
+      "drop_time_mean": -1.0,
+      "drop_time_min": -1.0,
+      "drop_time_max": -1.0
+    },
+    "low_friction": {
+      "success": 0,
+      "n": 18,
+      "rate": 0.0,
+      "ci": [
+        0.0,
+        0.1758845505823749
+      ],
+      "drop": 18,
+      "drop_time_mean": 5.534722222222222,
+      "drop_time_min": 5.532,
+      "drop_time_max": 5.54
+    }
+  },
+  "grip_scale_4_low_friction": {
+    "success": 18,
+    "n": 18
+  },
+  "detector_default": {
+    "tp": 54,
+    "fp": 0,
+    "tn": 36,
+    "fn": 0
+  },
+  "detector_slow": {
+    "tp": 54,
+    "fp": 0,
+    "tn": 36,
+    "fn": 0
+  },
+  "detector_oracle_aligned": {
+    "tp": 54,
+    "fp": 0,
+    "tn": 36,
+    "fn": 0
+  },
+  "official_subset_max_metric_diff": 0.0,
+  "seeds": [
+    31,
+    32,
+    33,
+    34,
+    35,
+    36
+  ],
+  "runs_per_batch": 90
+}

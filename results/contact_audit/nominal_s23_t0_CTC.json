@@ -1,0 +1,15 @@
+{
+  "method": "CTC",
+  "scenario": "nominal",
+  "seed": 23,
+  "trajectory": 0,
+  "config": {
+    "ctc_kp": 900.0,
+    "ctc_kd": 66.0
+  },
+  "summary": {
+    "n_contact_steps": 0,
+    "pairs": {}
+  },
+  "contacts": []
+}

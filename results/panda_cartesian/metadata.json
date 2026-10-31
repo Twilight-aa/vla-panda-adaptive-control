@@ -1,0 +1,8 @@
+{
+  "mujoco": "3.17.0",
+  "python": "3.14.9",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "script_sha256": "1b2c677cb7bed34344ab42c1a0c1f616b48c0f454038062fede45c189f0cc028",
+  "cartesian_reference": true,
+  "note": "Local Menagerie Panda, not LIBERO; offline reference, no grasp or VLA."
+}

@@ -1,0 +1,31 @@
+{
+  "method": "SMC",
+  "scenario": "low_friction",
+  "seed": 31,
+  "success": false,
+  "lifted": false,
+  "dropped": false,
+  "failure_phase": "grasp_or_lift",
+  "final_xy_error_m": 0.18911300261647104,
+  "max_object_height_m": 0.375041612911325,
+  "peak_contact_force_N": 1.465540317368944,
+  "saturation_fraction": 0.0,
+  "warning_count": 0,
+  "transport_bilateral_contact_fraction": 0.0,
+  "transport_relative_motion_m": 0.18681333005868153,
+  "final_tilt_deg": 0.0,
+  "effective_finger_friction_min": 0.12,
+  "object_mass_kg": 0.1,
+  "z_offset_m": 0.0,
+  "phase_peak_contact_force": {
+    "approach": 0.2667381553159427,
+    "descend": 0.24525000260866658,
+    "close": 0.8991004036577,
+    "lift": 1.465540317368944,
+    "transport": 0.24525000188630425,
+    "lower": 0.24525000188601562,
+    "release": 0.24525000188591817,
+    "retreat": 0.24525000188581933,
+    "settle": 0.2452500018856263
+  }
+}

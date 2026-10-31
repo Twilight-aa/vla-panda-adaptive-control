@@ -1,0 +1,34 @@
+{
+  "seeds": [
+    31,
+    32,
+    33,
+    34,
+    35,
+    36
+  ],
+  "scenarios": [
+    "nominal",
+    "heavy",
+    "slippery",
+    "pulse",
+    "low_friction"
+  ],
+  "methods": [
+    "CTC",
+    "SMC",
+    "RBF_SMC"
+  ],
+  "runs": 90,
+  "grip_scale": 1.5,
+  "lift_duration_s": 2.0,
+  "align_object": false,
+  "video": "nominal_RBF_SMC_31.mp4",
+  "source_sha256": "fa41b142ba3f876ee0b9a32171bf1b0cd6221104b7ef257e55a349db88b4a2b9",
+  "note": "formal calibrated-gripper batch; 1x original remains in results/grasp_transport",
+  "videos": [
+    "nominal_RBF_SMC_31.mp4",
+    "heavy_RBF_SMC_31.mp4",
+    "slippery_RBF_SMC_31.mp4"
+  ]
+}

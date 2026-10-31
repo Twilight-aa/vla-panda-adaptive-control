@@ -1,0 +1,2 @@
+scenario,controller,seed,joint_rmse_rad,ee_rmse_m,late_ee_rmse_m,torque_rms_Nm,max_weight_norm,saturation_fraction,actuator_mapping_error,warning_count,max_contacts,initial_contacts,contact_steps,contact_pairs,max_contact_force_N,first_contact_time_s,wall_seconds
+nominal,CTC,11,0.0033451171667877953,0.001941273840523527,7.765005206368227e-05,29.63135248455037,0.0,0.0,0.0,0,0,0,0,,0.0,-1.0,0.43618520797463134

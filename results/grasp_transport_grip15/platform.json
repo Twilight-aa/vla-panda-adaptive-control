@@ -1,0 +1,38 @@
+{
+  "role": "formal_contact_experiment_platform",
+  "decision_date": "2026-10-31",
+  "model": "MuJoCo Menagerie franka_emika_panda, commit a662de603224c47123b0783821c58ad4402ad3e3",
+  "gripper_force_scale": 1.5,
+  "change": "scale gripper actuator gainprm[7,0], biasprm[7,1], biasprm[7,2] by 1.5",
+  "controllers": "results/fair_tuning_v2/selected.json (frozen)",
+  "scenarios": [
+    "nominal",
+    "heavy",
+    "slippery",
+    "pulse",
+    "low_friction"
+  ],
+  "methods": [
+    "CTC",
+    "SMC",
+    "RBF_SMC"
+  ],
+  "seeds": [
+    31,
+    32,
+    33,
+    34,
+    35,
+    36
+  ],
+  "runs": 90,
+  "successes": 72,
+  "failure_boundary": "low_friction (mu=0.12): 0/18 at 1.5x; 18/18 only at 4x",
+  "original_model_archive": "results/grasp_transport (1x, 45 runs) and results/grasp_transport_ext (1x, 90 runs)",
+  "videos": [
+    "nominal_RBF_SMC_31.mp4",
+    "heavy_RBF_SMC_31.mp4",
+    "slippery_RBF_SMC_31.mp4"
+  ],
+  "source_sha256": "fa41b142ba3f876ee0b9a32171bf1b0cd6221104b7ef257e55a349db88b4a2b9"
+}

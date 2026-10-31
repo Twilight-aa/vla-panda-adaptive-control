@@ -1,0 +1,11 @@
+{
+  "duration_s": 6.0,
+  "time_scale": 1.0,
+  "max_velocity_rad_s": 0.14367166705485424,
+  "max_acceleration_rad_s2": 0.22449710454670638,
+  "max_interpolated_position_error_m": 8.22029957004165e-06,
+  "max_interpolated_orientation_error_rad": 4.0527648888272835e-08,
+  "joint_limits_ok": true,
+  "collision_avoidance_certified": false,
+  "note": "Synthetic offline Cartesian reference; natural spline starts with nonzero velocity. Match initial velocity or add a startup blend before hardware use."
+}

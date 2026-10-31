@@ -1,0 +1,45 @@
+{
+  "source_sha256": {
+    "grasp_transport.py": "3d4403fada57b2a1a88c41268ae7725b11ae7f6c3871562496a930ff73966789",
+    "controllers.py": "72c9fd5973971f753644e6263d20a433f6253fcdd3dc5e09be2cd207d3a03af0",
+    "run_panda_local.py": "f72d948cfcc2af2ec407a450979e12f8aae34e4fb1f65215a77aa08063175dbd"
+  },
+  "selected_config": {
+    "CTC": {
+      "ctc_kp": 900.0,
+      "ctc_kd": 66.0
+    },
+    "SMC": {
+      "ks_scale": 2.097730804583551,
+      "rho_scale": 1.8863353446096132,
+      "phi": 0.1440711967649831,
+      "lambda": 10.443604026840287
+    },
+    "RBF_SMC": {
+      "ks_scale": 1.4807135020965756,
+      "rho_scale": 1.6972306532273107,
+      "phi": 0.21404299603288485,
+      "lambda": 13.624580208104906,
+      "gamma": 11.921735800429415
+    }
+  },
+  "timings_s": [
+    0,
+    2,
+    4,
+    5,
+    7,
+    10,
+    12,
+    13,
+    15,
+    17
+  ],
+  "seeds": [
+    31,
+    32,
+    33
+  ],
+  "no_weld": true,
+  "note": "Batch rerun with shared controller; metrics identical to archived grasp_transport_v1_original."
+}

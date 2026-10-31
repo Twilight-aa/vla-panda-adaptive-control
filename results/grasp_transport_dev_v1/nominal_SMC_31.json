@@ -1,0 +1,26 @@
+{
+  "method": "SMC",
+  "scenario": "nominal",
+  "seed": 31,
+  "success": true,
+  "lifted": true,
+  "dropped": false,
+  "failure_phase": "none",
+  "final_xy_error_m": 0.0009287415599945794,
+  "max_object_height_m": 0.4994711697622637,
+  "peak_contact_force_N": 2.4135742074635345,
+  "saturation_fraction": 0.0,
+  "warning_count": 0,
+  "transport_bilateral_contact_fraction": 1.0,
+  "phase_peak_contact_force": {
+    "approach": 0.2667381553159427,
+    "descend": 0.24525000260866658,
+    "close": 0.7537903052023317,
+    "lift": 0.2699302585312613,
+    "transport": 0.09328223561814841,
+    "lower": 2.4135742074635345,
+    "release": 0.7032778214382177,
+    "retreat": 0.24525000209803527,
+    "settle": 0.24525000201807595
+  }
+}

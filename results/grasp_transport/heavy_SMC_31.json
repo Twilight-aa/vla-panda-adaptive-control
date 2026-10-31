@@ -1,0 +1,31 @@
+{
+  "method": "SMC",
+  "scenario": "heavy",
+  "seed": 31,
+  "success": false,
+  "lifted": false,
+  "dropped": false,
+  "failure_phase": "grasp_or_lift",
+  "final_xy_error_m": 0.15129155844059944,
+  "max_object_height_m": 0.3955017314637137,
+  "peak_contact_force_N": 10.878997293449448,
+  "saturation_fraction": 0.0,
+  "warning_count": 0,
+  "transport_bilateral_contact_fraction": 0.0,
+  "transport_relative_motion_m": 0.1868133914053761,
+  "final_tilt_deg": 2.091309789151873e-06,
+  "effective_finger_friction_min": 1.0,
+  "object_mass_kg": 0.25,
+  "z_offset_m": 0.0,
+  "phase_peak_contact_force": {
+    "approach": 0.6668453882898719,
+    "descend": 0.6131250051204293,
+    "close": 1.3406326014836911,
+    "lift": 10.878997293449448,
+    "transport": 0.6131250047087705,
+    "lower": 0.6131250046438893,
+    "release": 0.6131250046434095,
+    "retreat": 0.6131250046431651,
+    "settle": 0.6131250046426803
+  }
+}

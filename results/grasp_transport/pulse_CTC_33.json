@@ -1,0 +1,31 @@
+{
+  "method": "CTC",
+  "scenario": "pulse",
+  "seed": 33,
+  "success": true,
+  "lifted": true,
+  "dropped": false,
+  "failure_phase": "none",
+  "final_xy_error_m": 0.0004859216657503794,
+  "max_object_height_m": 0.5003623860735418,
+  "peak_contact_force_N": 1.8567842176424367,
+  "saturation_fraction": 0.0,
+  "warning_count": 0,
+  "transport_bilateral_contact_fraction": 1.0,
+  "transport_relative_motion_m": 0.0031081622133954726,
+  "final_tilt_deg": 0.0,
+  "effective_finger_friction_min": 1.0,
+  "object_mass_kg": 0.1,
+  "z_offset_m": 0.0,
+  "phase_peak_contact_force": {
+    "approach": 0.2667381553159427,
+    "descend": 0.24525000193825885,
+    "close": 0.41415882493205186,
+    "lift": 0.23964330477257384,
+    "transport": 0.22389077470159247,
+    "lower": 1.8567842176424367,
+    "release": 0.6509572857579735,
+    "retreat": 0.2452500022420701,
+    "settle": 0.24525000218682574
+  }
+}

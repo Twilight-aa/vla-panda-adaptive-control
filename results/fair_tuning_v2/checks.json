@@ -1,0 +1,54 @@
+{
+  "fair_tuning_v2": {
+    "development_runs": 96,
+    "heldout_runs": 126,
+    "noise_runs": 27,
+    "selected_identical_to_v1": true,
+    "max_abs_ee_rmse_diff_m": 1.8530059934032672e-07,
+    "all_free_runs_zero_contacts": true,
+    "all_free_runs_zero_initial_contacts": true,
+    "all_warning_counts_zero": true
+  },
+  "grasp_transport": {
+    "runs": 45,
+    "successes": 18,
+    "all_warning_counts_zero": true,
+    "effective_contact_friction_verified": true
+  },
+  "grasp_transport_grip15": {
+    "runs": 90,
+    "successes": 72,
+    "all_warning_counts_zero": true,
+    "effective_contact_friction_verified": true
+  },
+  "gripper_bench": {
+    "pull_sweep_runs": 20,
+    "capacity_by_friction": {
+      "1.0": [
+        2.501125,
+        2.2155000000000005,
+        2.795499999999999
+      ],
+      "0.5": [
+        1.4706250000000005,
+        1.3935000000000004,
+        1.5355000000000003
+      ],
+      "0.35": [
+        1.111625,
+        1.0395000000000003,
+        1.1835
+      ],
+      "0.2": [
+        0.738125,
+        0.6794999999999999,
+        0.8015000000000003
+      ],
+      "0.12": [
+        0.529625,
+        0.46750000000000014,
+        0.5935000000000001
+      ]
+    }
+  }
+}
