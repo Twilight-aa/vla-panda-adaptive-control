@@ -41,14 +41,19 @@ def solve_ik(c, q0, target_pos, target_ori, iters=40, damping=1e-3, step=.5, use
 
 
 def main():
+    print("diagnose: creating benchmark", flush=True)
     suite = benchmark.get_benchmark_dict()["libero_spatial"]()
     task = suite.get_task(0)
+    print("diagnose: creating env", flush=True)
     env, _ = rle.get_libero_env(task, "openvla", 256)
     install(env, "CTC", {"ctc_kp": 900., "ctc_kd": 66., "ref_tau": .02})
+    print("diagnose: reset", flush=True)
     env.reset()
+    print("diagnose: stepping", flush=True)
     action = np.array([.5, 0., 0., 0., 0., 0., -1.])
     for _ in range(60):
         env.step(action)
+    print("diagnose: stepped", flush=True)
     c = env.robots[0].controller
     q0 = c.sim.data.qpos[c.qidx].copy()
     target_pos = np.asarray(c.osc.goal_pos).copy()
@@ -57,6 +62,18 @@ def main():
     print("target", np.round(target_pos, 4), "ori_shape", target_ori.shape)
     print("site", np.round(c.sim.data.site_xpos[c.site_id], 4))
     print("limits", np.round(c.m.jnt_range[c.qidx], 4))
+    qw = c._ik(q0, target_pos, target_ori)
+    dw = mujoco.MjData(c.m)
+    dw.qpos[:] = c.sim.data._data.qpos
+    dw.qpos[c.qidx] = qw
+    mujoco.mj_forward(c.m, dw)
+    print(
+        "wrapper_ik |dp|={:.6f} |do|={:.6f} q={}".format(
+            float(np.linalg.norm(target_pos - dw.site_xpos[c.site_id])),
+            float(np.linalg.norm(orientation_error(target_ori, dw.site_xmat[c.site_id].reshape(3, 3)))),
+            np.round(qw, 4),
+        )
+    )
     for use_ori in [True, False]:
         for iters in [40, 100, 300]:
             for damping in [1e-3, 1e-2, 1e-1]:

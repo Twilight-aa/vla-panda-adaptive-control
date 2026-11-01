@@ -5,8 +5,13 @@ converts them to a Cartesian goal.  This wrapper keeps that goal, solves a
 damped-least-squares IK for a joint target, and replaces the OSC torque law
 with CTC / SMC / RBF-SMC from the course project.
 """
-import os
+import atexit
+import json
 import math
+import os
+import time
+from pathlib import Path
+
 import numpy as np
 import mujoco
 from robosuite.utils.control_utils import orientation_error
@@ -15,6 +20,8 @@ HOME = np.array([0., -.25, 0., -1.7, 0., 1.5, -.7853])
 
 
 class TorqueControllerWrapper:
+    _episode_counts = {}
+    _instances = []
     def __init__(self, osc, method="CTC", config=None):
         self.osc = osc
         self.method = method
@@ -33,7 +40,48 @@ class TorqueControllerWrapper:
         self._qtar = None
         self._goal_key = None
         self._qref = None
+        TorqueControllerWrapper._instances.append(self)
+        self._last_ik_dp = 0.
+        self._last_ik_do = 0.
         self.debug = bool(self.c.get("debug", False)) or os.environ.get("TORQUE_DEBUG") == "1"
+        self._telemetry = bool(self.c.get("telemetry", False))
+        self._telemetry_dir = Path(self.c.get("telemetry_dir", "/root/telemetry"))
+        self._telemetry_closed = False
+        self._stats = {
+            "steps": 0, "sum_qerr": 0., "max_qerr": 0.,
+            "sum_ee_err": 0., "max_ee_err": 0.,
+            "sum_tau": 0., "max_tau": 0.,
+            "sum_ik_dp": 0., "max_ik_dp": 0.,
+            "sum_ik_do": 0., "max_ik_do": 0.,
+        }
+        if self._telemetry:
+            TorqueControllerWrapper._episode_counts[method] = (
+                TorqueControllerWrapper._episode_counts.get(method, 0) + 1)
+            self._episode_id = TorqueControllerWrapper._episode_counts[method]
+            atexit.register(self.close_episode)
+
+    @classmethod
+    def close_all(cls):
+        for obj in list(cls._instances):
+            obj.close_episode()
+
+    def close_episode(self):
+        if not self._telemetry or self._telemetry_closed or self._stats["steps"] == 0:
+            return
+        self._telemetry_closed = True
+        row = {
+            "method": self.method,
+            "episode": getattr(self, "_episode_id", None),
+            "timestamp": time.time(),
+            "steps": self._stats["steps"],
+            **{k: self._stats[k] for k in self._stats if k != "steps"},
+        }
+        try:
+            self._telemetry_dir.mkdir(parents=True, exist_ok=True)
+            with open(self._telemetry_dir / f"{self.method}.jsonl", "a") as f:
+                f.write(json.dumps(row) + "\n")
+        except Exception as exc:
+            print(f"[torque-telemetry] write failed: {exc}", flush=True)
 
     def __getattr__(self, name):
         return getattr(self.osc, name)
@@ -105,10 +153,14 @@ class TorqueControllerWrapper:
         weight = float(self.c.get("ik_ori_weight", 1.0))
         q, dp, do = self._ik_once(q0, target_pos, target_ori, iters, weight)
         if weight > 0 and np.linalg.norm(dp) > 5e-3:
-            q2, dp2, do2 = self._ik_once(q0, target_pos, target_ori, 120, 0.)
+            q2, dp2, do2 = self._ik_once(
+                q0, target_pos, target_ori,
+                int(self.c.get("ik_fallback_iters", 160)), 0.)
             if (np.linalg.norm(dp2) < .5 * np.linalg.norm(dp)
-                    and np.linalg.norm(do2) < .2):
+                    and np.linalg.norm(do2) < float(self.c.get("ik_fallback_ori_max", .35))):
                 q, dp, do = q2, dp2, do2
+        self._last_ik_dp = float(np.linalg.norm(dp))
+        self._last_ik_do = float(np.linalg.norm(do))
         if self.debug and self._steps % 500 == 1:
             d = mujoco.MjData(self.m)
             d.qpos[:] = self.sim.data._data.qpos
@@ -184,6 +236,17 @@ class TorqueControllerWrapper:
                     self.W += dt * (-self.c.get("gamma", 8.) * np.outer(s, phi) - .02 * self.W)
                     self.W *= min(1, 50 / max(np.linalg.norm(self.W), 1e-12))
         self.last_tau = tau
+        if self._telemetry:
+            qerr = float(np.linalg.norm(q - qtar))
+            eeerr = float(np.linalg.norm(o.ee_pos - o.goal_pos))
+            tn = float(np.linalg.norm(tau))
+            st = self._stats
+            st["steps"] += 1
+            st["sum_qerr"] += qerr; st["max_qerr"] = max(st["max_qerr"], qerr)
+            st["sum_ee_err"] += eeerr; st["max_ee_err"] = max(st["max_ee_err"], eeerr)
+            st["sum_tau"] += tn; st["max_tau"] = max(st["max_tau"], tn)
+            st["sum_ik_dp"] += self._last_ik_dp; st["max_ik_dp"] = max(st["max_ik_dp"], self._last_ik_dp)
+            st["sum_ik_do"] += self._last_ik_do; st["max_ik_do"] = max(st["max_ik_do"], self._last_ik_do)
         if self.debug and self._steps % 500 == 1:
             print(
                 "[torque-debug] step={} q_err={:.4f} ee_err={:.4f} "
@@ -218,6 +281,9 @@ def install(env, method, config):
         original_reset = env.reset
 
         def reset_and_wrap(*args, **kwargs):
+            old = env.robots[0].controller
+            if isinstance(old, TorqueControllerWrapper):
+                old.close_episode()
             result = original_reset(*args, **kwargs)
             robot = env.robots[0]
             robot.controller = TorqueControllerWrapper(robot.controller, method, config)

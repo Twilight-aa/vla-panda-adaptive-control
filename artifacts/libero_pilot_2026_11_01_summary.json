@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "date": "2026-11-01",
+    "instance": "Matpool px-cloud2.matpool.com:28394, A100-PCIE-40GB, 90GB RAM",
+    "checkpoint": "moojink/openvla-7b-oft-finetuned-libero-spatial",
+    "task_suite": "libero_spatial",
+    "protocol": "10 tasks x 1 trial; same checkpoint/initial states; OSC vs CTC joint-torque wrapper",
+    "note": "This is a pilot only. It does not replace the 500-episode baseline and does not justify a 10x10x5 or 500-episode custom-controller batch.",
+    "artifacts": {
+      "libero_pilot_2026_11_01.tar.gz": {
+        "bytes": 10144,
+        "sha256": "ee9f058bedbce78dd11bdde9d19f51ce9ae01993dbf2eb42f39e9ffd4b354496"
+      },
+      "libero_pilot_CTC_2026_11_01.log": {
+        "bytes": 24444,
+        "sha256": "8fbfc8a9bf4e2c8c14baaf7f513179b9e7f73dbb1724ba2ec7fd802e7e900d8a"
+      },
+      "libero_pilot_OSC_2026_11_01.log": {
+        "bytes": 24557,
+        "sha256": "5e1122041efa36329403b4143d37d81a8fa147cf2e6f6ed2fe259ccd2007432a"
+      }
+    }
+  },
+  "methods": {
+    "OSC": {
+      "episodes": 10,
+      "successes": 10,
+      "rate": 1.0,
+      "per_task": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "CTC": {
+      "episodes": 10,
+      "successes": 4,
+      "rate": 0.4,
+      "per_task": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0
+      ]
+    }
+  }
+}

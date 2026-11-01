@@ -29,3 +29,22 @@ python experiments/robot/libero/run_libero_eval.py \
 
 ## Result
 500 episodes, 493 successes, 98.6%.
+
+## 2026-11-01 新实例重建（px-cloud2）
+
+旧实例失联后，新实例 `px-cloud2.matpool.com:28394` 重新配置：
+
+- Python 3.10.14、torch 2.2.0+cu121、torchvision 0.17.0+cu121、torchaudio 2.2.0+cu121
+- numpy 1.26.4、opencv-python 4.10.0.84、tensorflow 2.15.0、tensorflow-metadata 1.14.0、wandb 0.16.6、protobuf 3.20.3
+- robosuite 1.4.1、mujoco 3.3.7、LIBERO 0.1.0
+- 检查点从 hf-mirror 下载到 `/root/models/openvla-oft-libero-spatial`
+- `flash-attn==2.5.5` 的预编译 wheel 下载超时，源码构建未完成；当前模型以 eager attention 运行，OSC 10/10 和 CTC 4/10 pilot 均可正常推理。若后续训练/需要 flash attention，需用 `FLASH_ATTENTION_FORCE_BUILD=TRUE` 从源码构建或换可访问的 wheel 源。
+
+启动 pilot 的关键环境变量：
+
+```bash
+export MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
+export PYTHONPATH=/root/LIBERO:${PYTHONPATH:-}
+source /root/miniconda3/etc/profile.d/conda.sh
+conda activate openvla-oft
+```

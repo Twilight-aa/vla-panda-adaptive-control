@@ -14,10 +14,11 @@ from libero_torque_wrapper import install
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--method", default="CTC", choices=["CTC", "SMC", "RBF_SMC", "RBF_NO_ROBUST", "RBF_FROZEN"])
+    ap.add_argument("--method", default="CTC", choices=["OSC", "CTC", "SMC", "RBF_SMC", "RBF_NO_ROBUST", "RBF_FROZEN"])
     ap.add_argument("--task-suite", default="libero_spatial")
     ap.add_argument("--checkpoint", default="/root/models/openvla-oft-libero-spatial")
     ap.add_argument("--trials", type=int, default=1)
+    ap.add_argument("--task-limit", type=int, default=None, help="debug: only run the first N tasks")
     ap.add_argument("--config", default="/root/selected.json")
     args = ap.parse_args()
     configs = json.loads(Path(args.config).read_text())
@@ -41,11 +42,28 @@ def main():
 
     def patched(task, model_family, resolution=256):
         env, description = original(task, model_family, resolution=resolution)
-        install(env, args.method, config)
+        if args.method != "OSC":
+            install(env, args.method, config)
         return env, description
 
     rle.get_libero_env = patched
-    print(f"Running {args.method} with config {config}", flush=True)
+    if args.task_limit is not None:
+        original_benchmark = rle.benchmark.get_benchmark_dict
+
+        def limited_benchmark():
+            suites = original_benchmark()
+            suite_cls = suites[args.task_suite]
+
+            class LimitedSuite(suite_cls):
+                def __init__(self, *a, **kw):
+                    super().__init__(*a, **kw)
+                    self.n_tasks = min(self.n_tasks, args.task_limit)
+
+            suites[args.task_suite] = LimitedSuite
+            return suites
+
+        rle.benchmark.get_benchmark_dict = limited_benchmark
+    print(f"Running {args.method} with config {config} task_limit={args.task_limit}", flush=True)
     return rle.eval_libero.__wrapped__(cfg)
 
 
