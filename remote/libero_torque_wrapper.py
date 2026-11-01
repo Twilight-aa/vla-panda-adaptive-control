@@ -64,7 +64,7 @@ class TorqueControllerWrapper:
         d = self._forward(qpos, qvel)
         return d.qfrc_bias.copy(), d.qfrc_passive.copy()
 
-    def _ik(self, q0, target_pos, target_ori):
+    def _ik_once(self, q0, target_pos, target_ori, iters, ori_weight):
         q = q0.copy()
         lo = self.m.jnt_range[self.qidx, 0] + .01
         hi = self.m.jnt_range[self.qidx, 1] - .01
@@ -73,29 +73,51 @@ class TorqueControllerWrapper:
         d.qvel[:] = 0
         jp = np.zeros((3, self.m.nv))
         jr = np.zeros((3, self.m.nv))
-        for _ in range(40):
+        dp = np.zeros(3)
+        do = np.zeros(3)
+        for _ in range(iters):
             d.qpos[self.qidx] = q
             mujoco.mj_forward(self.m, d)
             dp = np.array(target_pos) - d.site_xpos[self.site_id]
             do = orientation_error(np.array(target_ori), d.site_xmat[self.site_id].reshape(3, 3))
-            err = np.r_[dp, do]
+            err = np.r_[dp, ori_weight * do]
             if np.linalg.norm(err) < 1e-4:
                 break
             mujoco.mj_jacSite(self.m, d, jp, jr, self.site_id)
             J = np.vstack([jp[:, self.vidx], jr[:, self.vidx]])
             dq = J.T @ np.linalg.solve(J @ J.T + 1e-3 * np.eye(6), err)
             q = np.clip(q + .5 * dq, lo, hi)
+        # Re-evaluate at the returned q so the residual is not the one from
+        # before the last update.
+        d.qpos[self.qidx] = q
+        mujoco.mj_forward(self.m, d)
+        dp = np.array(target_pos) - d.site_xpos[self.site_id]
+        do = orientation_error(np.array(target_ori), d.site_xmat[self.site_id].reshape(3, 3))
+        return q, dp, do
+
+    def _ik(self, q0, target_pos, target_ori):
+        # Full 6-D IK first.  If the position residual is large while the
+        # orientation error is small, the target orientation is likely
+        # infeasible at that point; retry with position priority and only use
+        # the fallback if it substantially improves position without a large
+        # orientation error.
+        iters = int(self.c.get("ik_iters", 60))
+        weight = float(self.c.get("ik_ori_weight", 1.0))
+        q, dp, do = self._ik_once(q0, target_pos, target_ori, iters, weight)
+        if weight > 0 and np.linalg.norm(dp) > 5e-3:
+            q2, dp2, do2 = self._ik_once(q0, target_pos, target_ori, 120, 0.)
+            if (np.linalg.norm(dp2) < .5 * np.linalg.norm(dp)
+                    and np.linalg.norm(do2) < .2):
+                q, dp, do = q2, dp2, do2
         if self.debug and self._steps % 500 == 1:
-            dd = mujoco.MjData(self.m)
-            dd.qpos[:] = self.sim.data._data.qpos
-            dd.qpos[self.qidx] = q
-            mujoco.mj_forward(self.m, dd)
-            dp = np.array(target_pos) - dd.site_xpos[self.site_id]
-            do = orientation_error(np.array(target_ori), dd.site_xmat[self.site_id].reshape(3, 3))
+            d = mujoco.MjData(self.m)
+            d.qpos[:] = self.sim.data._data.qpos
+            d.qpos[self.qidx] = q
+            mujoco.mj_forward(self.m, d)
             print(
                 "[torque-ik] step={} |dp|={:.5f} |do|={:.5f} target={} site={}".format(
                     self._steps, float(np.linalg.norm(dp)), float(np.linalg.norm(do)),
-                    np.round(target_pos, 4), np.round(dd.site_xpos[self.site_id], 4)
+                    np.round(target_pos, 4), np.round(d.site_xpos[self.site_id], 4)
                 ),
                 flush=True,
             )
