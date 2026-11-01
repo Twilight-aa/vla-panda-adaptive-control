@@ -1,7 +1,14 @@
 {
   "CTC": {
-    "ctc_kp": 900.0,
-    "ctc_kd": 66.0
+    "cartesian": true,
+    "cart_kp_p": 150.0,
+    "cart_kd_p": 20.0,
+    "cart_kp_o": 150.0,
+    "cart_kd_o": 20.0,
+    "cart_damping": 0.01,
+    "cart_qdd_max": 200.0,
+    "cart_use_jdot": false,
+    "cart_use_nullspace": false
   },
   "SMC": {
     "ks_scale": 2.097730804583551,

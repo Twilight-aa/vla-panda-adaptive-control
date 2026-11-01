@@ -14,7 +14,7 @@ from pathlib import Path
 
 import numpy as np
 import mujoco
-from robosuite.utils.control_utils import orientation_error
+from robosuite.utils.control_utils import orientation_error, opspace_matrices, nullspace_torques
 
 HOME = np.array([0., -.25, 0., -1.7, 0., 1.5, -.7853])
 
@@ -40,6 +40,8 @@ class TorqueControllerWrapper:
         self._qtar = None
         self._goal_key = None
         self._qref = None
+        self._dqref = None
+        self._J_prev = None
         TorqueControllerWrapper._instances.append(self)
         self._last_ik_dp = 0.
         self._last_ik_do = 0.
@@ -99,6 +101,8 @@ class TorqueControllerWrapper:
         self._qtar = None
         self._goal_key = None
         self._qref = None
+        self._dqref = None
+        self._J_prev = None
         return self.osc.reset_goal()
 
     def _forward(self, qpos, qvel):
@@ -175,6 +179,64 @@ class TorqueControllerWrapper:
             )
         return q
 
+    def _run_cartesian_ctc(self, qfull, vfull, q, v):
+        """Task-space CTC: inverse dynamics on a Cartesian acceleration.
+
+        This is an optional CTC variant for VLA integration.  It avoids the
+        joint-space IK bottleneck: the desired Cartesian acceleration is
+        computed from the OSC goal, mapped to joint acceleration through the
+        damped least-squares Jacobian inverse, and then converted to torque by
+        inverse dynamics.
+        """
+        o = self.osc
+        dt = float(self.m.opt.timestep)
+        d = self._forward(qfull, vfull)
+        jp = np.zeros((3, self.m.nv))
+        jr = np.zeros((3, self.m.nv))
+        mujoco.mj_jacSite(self.m, d, jp, jr, self.site_id)
+        J = np.vstack([jp[:, self.vidx], jr[:, self.vidx]])
+        if self._J_prev is None or not bool(self.c.get("cart_use_jdot", True)):
+            Jdqd = np.zeros(6)
+        else:
+            Jdqd = ((J - self._J_prev) / max(dt, 1e-6)) @ v
+        self._J_prev = J.copy()
+        pos_err = np.asarray(o.goal_pos) - np.asarray(o.ee_pos)
+        ori_err = orientation_error(np.asarray(o.goal_ori), np.asarray(o.ee_ori_mat))
+        kp_p = float(self.c.get("cart_kp_p", 150.))
+        kd_p = float(self.c.get("cart_kd_p", 20.))
+        kp_o = float(self.c.get("cart_kp_o", 150.))
+        kd_o = float(self.c.get("cart_kd_o", 20.))
+        a_cart = np.r_[
+            kp_p * pos_err - kd_p * np.asarray(o.ee_pos_vel),
+            kp_o * ori_err - kd_o * np.asarray(o.ee_ori_vel),
+        ]
+        qdd = J.T @ np.linalg.solve(J @ J.T + float(self.c.get("cart_damping", 1e-2)) * np.eye(6),
+                                    a_cart - Jdqd)
+        qdd = np.clip(qdd, -float(self.c.get("cart_qdd_max", 200.)),
+                      float(self.c.get("cart_qdd_max", 200.)))
+        h, passive = self._bias(qfull, vfull)
+        h = h[self.vidx]; passive = passive[self.vidx]
+        Mfull = np.zeros((self.m.nv, self.m.nv))
+        mujoco.mj_fullM(self.m, Mfull, d.qM)
+        M = Mfull[np.ix_(self.vidx, self.vidx)]
+        tau = M @ qdd + h - passive
+        if bool(self.c.get("cart_use_nullspace", True)):
+            _, _, _, nullspace = opspace_matrices(M, J, J[:3], J[3:])
+            tau = tau + nullspace_torques(
+                M, nullspace, np.asarray(o.initial_joint), q, v,
+                joint_kp=float(self.c.get("cart_null_kp", 10.0)))
+        self.last_tau = tau
+        if self.debug and self._steps % 500 == 1:
+            print(
+                "[cart-debug] step={} pos_err={:.4f} ori_err={:.4f} |tau|={:.2f} max|tau|={:.2f}".format(
+                    self._steps, float(np.linalg.norm(pos_err)), float(np.linalg.norm(ori_err)),
+                    float(np.linalg.norm(tau)), float(np.max(np.abs(tau)))
+                ),
+                flush=True,
+            )
+        o.new_update = True
+        return tau
+
     def run_controller(self):
         o = self.osc
         o.update()
@@ -184,6 +246,8 @@ class TorqueControllerWrapper:
         vfull = d.qvel.copy()
         q = qfull[self.qidx].copy()
         v = vfull[self.vidx].copy()
+        if self.method == "CTC" and bool(self.c.get("cartesian", False)):
+            return self._run_cartesian_ctc(qfull, vfull, q, v)
         goal_key = (np.asarray(o.goal_pos).tobytes(), np.asarray(o.goal_ori).tobytes())
         if self._qtar is None or goal_key != self._goal_key:
             self._qtar = self._ik(q, o.goal_pos, o.goal_ori)
@@ -192,17 +256,34 @@ class TorqueControllerWrapper:
         dt = float(self.m.opt.timestep)
         if self._qref is None:
             self._qref = q.copy()
-        qref_prev = self._qref.copy()
-        # First-order reference filter: the IK target is a step, but feeding
-        # the step directly into a high-gain torque law saturates the joints.
-        # Smooth it at the simulator substep rate, then use its derivative as
-        # the reference velocity for CTC/SMC.
-        ref_tau = float(self.c.get("ref_tau", .1))
-        alpha = 1. - math.exp(-dt / max(ref_tau, 1e-6))
-        self._qref += alpha * (qtar - self._qref)
-        qd = self._qref.copy()
-        dqd = np.clip((qd - qref_prev) / dt, -2., 2.)
-        ddqd = np.zeros(7)
+        if self._dqref is None:
+            self._dqref = np.zeros(7)
+        ref_order = int(self.c.get("ref_order", 1))
+        if ref_order >= 2:
+            # Critically damped second-order reference filter with
+            # acceleration feedforward.  This keeps the IK step smooth while
+            # giving CTC/SMC a physically meaningful qd/qdd.
+            omega = float(self.c.get("ref_omega", 18.))
+            zeta = float(self.c.get("ref_zeta", 1.))
+            qdd_ref = omega * omega * (qtar - self._qref) - 2. * zeta * omega * self._dqref
+            qdd_ref = np.clip(qdd_ref, -float(self.c.get("ref_qdd_max", 120.)),
+                              float(self.c.get("ref_qdd_max", 120.)))
+            self._qref = self._qref + self._dqref * dt + .5 * qdd_ref * dt * dt
+            self._dqref = self._dqref + qdd_ref * dt
+            qd = self._qref.copy()
+            dqd = self._dqref.copy()
+            ddqd = qdd_ref
+        else:
+            qref_prev = self._qref.copy()
+            # First-order reference filter: the IK target is a step, but
+            # feeding the step directly into a high-gain torque law saturates
+            # the joints.  Smooth it at the simulator substep rate.
+            ref_tau = float(self.c.get("ref_tau", .1))
+            alpha = 1. - math.exp(-dt / max(ref_tau, 1e-6))
+            self._qref += alpha * (qtar - self._qref)
+            qd = self._qref.copy()
+            dqd = np.clip((qd - qref_prev) / dt, -2., 2.)
+            ddqd = np.zeros(7)
         e = q - qd
         de = v - dqd
         lam = self.c.get("lambda", 8.)

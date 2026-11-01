@@ -1,0 +1,94 @@
+{
+  "meta": {
+    "date": "2026-11-01",
+    "protocol": "LIBERO-Spatial 10 tasks x 1 trial; OSC vs task-space CTC",
+    "note": "Task-space CTC replaced joint-space IK CTC after pilot 4/10. Best task-space runs 9/10; final rerun 8/10 (tasks 8,9 failed). Not a 500-episode result; do not use for controller ranking."
+  },
+  "methods": {
+    "OSC": {
+      "episodes": 10,
+      "successes": 10,
+      "rate": 1.0,
+      "per_task": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "CTC_joint_ik": {
+      "episodes": 10,
+      "successes": 4,
+      "rate": 0.4,
+      "per_task": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0
+      ]
+    },
+    "CTC_cart_run1": {
+      "episodes": 10,
+      "successes": 9,
+      "rate": 0.9,
+      "per_task": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0
+      ]
+    },
+    "CTC_cart_run2": {
+      "episodes": 10,
+      "successes": 9,
+      "rate": 0.9,
+      "per_task": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0
+      ]
+    },
+    "CTC_cart_final": {
+      "episodes": 10,
+      "successes": 8,
+      "rate": 0.8,
+      "per_task": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0
+      ]
+    }
+  }
+}

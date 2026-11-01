@@ -56,4 +56,4 @@ after reset: TorqueControllerWrapper
 after step:  TorqueControllerWrapper, _steps=25, ||tau||=26.77
 ```
 
-此外，`run_controller()` 在 500 Hz 子步调用，不能把 `(qtar-q)/dt`（按 20 Hz 取的 dt）当速度前馈；当前版本令 `dqd=0`，由 CTC/SMC 的 PD/滑模项跟踪 IK 阶跃目标。修复后的新实例 pilot（2026-11-01）：OSC 10/10，CTC 4/10（任务 1、2、6、7 成功，0、3、4、5、8、9 失败）。pilot 未通过，因此没有启动 10×10×5 或 500 回合/方法。CTC 的问题是轨迹质量/时序（episode 常跑满 220 步，OSC 同任务约 75 帧完成；调试可见力矩饱和和位置优先 IK 的朝向误差约 0.22 rad），不是包装器没装上。当前包装器没有记录完整的轨迹级控制指标，下一轮应补关节/末端误差、IK 残差、力矩 RMS/饱和和接触力，再做扰动实验。完整审计见 `docs/远程LIBERO控制器对比结果.md`。
+此外，`run_controller()` 在 500 Hz 子步调用，不能把 `(qtar-q)/dt`（按 20 Hz 取的 dt）当速度前馈；当前版本令 `dqd=0`，由 CTC/SMC 的 PD/滑模项跟踪 IK 阶跃目标。修复后的新实例 pilot（2026-11-01）：OSC 10/10；关节空间 IK CTC 4/10。改为任务空间 CTC（`cartesian=True`，关闭有限差分 `cart_use_jdot`）后，两次 10 回合 pilot 均为 9/10，均 task 9 失败；最终复核 8/10（task 8、9 失败）。pilot 仍未严格 10/10，因此没有启动 10×10×5 或 500 回合/方法。失败集中在高位/长轨迹任务，不是包装器没装上。当前包装器没有记录完整的轨迹级控制指标，下一轮应补关节/末端误差、IK 残差、力矩 RMS/饱和和接触力，再做扰动实验。完整审计见 `docs/远程LIBERO控制器对比结果.md`。

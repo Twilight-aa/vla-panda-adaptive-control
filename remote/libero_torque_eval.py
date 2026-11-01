@@ -19,6 +19,7 @@ def main():
     ap.add_argument("--checkpoint", default="/root/models/openvla-oft-libero-spatial")
     ap.add_argument("--trials", type=int, default=1)
     ap.add_argument("--task-limit", type=int, default=None, help="debug: only run the first N tasks")
+    ap.add_argument("--task-id", type=int, default=None, help="debug: run only this task id")
     ap.add_argument("--config", default="/root/selected.json")
     args = ap.parse_args()
     configs = json.loads(Path(args.config).read_text())
@@ -47,8 +48,9 @@ def main():
         return env, description
 
     rle.get_libero_env = patched
-    if args.task_limit is not None:
+    if args.task_id is not None or args.task_limit is not None:
         original_benchmark = rle.benchmark.get_benchmark_dict
+        target_id = args.task_id
 
         def limited_benchmark():
             suites = original_benchmark()
@@ -57,7 +59,16 @@ def main():
             class LimitedSuite(suite_cls):
                 def __init__(self, *a, **kw):
                     super().__init__(*a, **kw)
-                    self.n_tasks = min(self.n_tasks, args.task_limit)
+                    if target_id is not None:
+                        self.n_tasks = 1
+                    else:
+                        self.n_tasks = min(self.n_tasks, args.task_limit)
+
+                def get_task(self, i):
+                    return super().get_task(target_id if target_id is not None else i)
+
+                def get_task_init_states(self, i):
+                    return super().get_task_init_states(target_id if target_id is not None else i)
 
             suites[args.task_suite] = LimitedSuite
             return suites
