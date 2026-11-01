@@ -27,6 +27,10 @@ vendor/
 # Logs
 *.log
 
+# Large video-only rollout archives: keep them local/external; the compact
+# log bundle in artifacts/ is the Git-tracked evidence.
+artifacts/torque_500_rollouts_*.tar.gz
+
 # Results: large per-run artifacts are regenerable; track summaries/configs/checks.
 results/**/*.npz
 results/**/*.mp4

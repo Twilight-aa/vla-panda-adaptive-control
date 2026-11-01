@@ -1,0 +1,147 @@
+{
+  "methods": {
+    "CTC": {
+      "episodes": 500,
+      "successes": 493,
+      "rate": 0.986,
+      "wilson95": [
+        0.9714,
+        0.9932
+      ]
+    },
+    "SMC": {
+      "episodes": 500,
+      "successes": 495,
+      "rate": 0.99,
+      "wilson95": [
+        0.9768,
+        0.9957
+      ]
+    },
+    "RBF_SMC": {
+      "episodes": 500,
+      "successes": 492,
+      "rate": 0.984,
+      "wilson95": [
+        0.9687,
+        0.9919
+      ]
+    },
+    "RBF_NO_ROBUST": {
+      "episodes": 500,
+      "successes": 491,
+      "rate": 0.982,
+      "wilson95": [
+        0.9661,
+        0.9905
+      ]
+    },
+    "RBF_FROZEN": {
+      "episodes": 500,
+      "successes": 491,
+      "rate": 0.982,
+      "wilson95": [
+        0.9661,
+        0.9905
+      ]
+    },
+    "OSC": {
+      "episodes": 500,
+      "successes": 493,
+      "rate": 0.986,
+      "wilson95": [
+        0.9714,
+        0.9932
+      ]
+    }
+  },
+  "pairwise": {
+    "CTC_vs_SMC": {
+      "a_only": 1,
+      "b_only": 3,
+      "discordant": 4,
+      "p_exact": 0.625
+    },
+    "CTC_vs_RBF_SMC": {
+      "a_only": 6,
+      "b_only": 5,
+      "discordant": 11,
+      "p_exact": 1.0
+    },
+    "CTC_vs_RBF_NO_ROBUST": {
+      "a_only": 5,
+      "b_only": 3,
+      "discordant": 8,
+      "p_exact": 0.7265625
+    },
+    "CTC_vs_RBF_FROZEN": {
+      "a_only": 6,
+      "b_only": 4,
+      "discordant": 10,
+      "p_exact": 0.75390625
+    },
+    "SMC_vs_RBF_SMC": {
+      "a_only": 5,
+      "b_only": 2,
+      "discordant": 7,
+      "p_exact": 0.453125
+    },
+    "SMC_vs_RBF_NO_ROBUST": {
+      "a_only": 6,
+      "b_only": 2,
+      "discordant": 8,
+      "p_exact": 0.2890625
+    },
+    "SMC_vs_RBF_FROZEN": {
+      "a_only": 7,
+      "b_only": 3,
+      "discordant": 10,
+      "p_exact": 0.34375
+    },
+    "RBF_SMC_vs_RBF_NO_ROBUST": {
+      "a_only": 5,
+      "b_only": 4,
+      "discordant": 9,
+      "p_exact": 1.0
+    },
+    "RBF_SMC_vs_RBF_FROZEN": {
+      "a_only": 6,
+      "b_only": 5,
+      "discordant": 11,
+      "p_exact": 1.0
+    },
+    "RBF_NO_ROBUST_vs_RBF_FROZEN": {
+      "a_only": 4,
+      "b_only": 4,
+      "discordant": 8,
+      "p_exact": 1.0
+    }
+  },
+  "pairwise_vs_OSC": {
+    "CTC": {
+      "a_only": 4,
+      "b_only": 4,
+      "p_exact": 1.0
+    },
+    "SMC": {
+      "a_only": 2,
+      "b_only": 4,
+      "p_exact": 0.6875
+    },
+    "RBF_SMC": {
+      "a_only": 4,
+      "b_only": 3,
+      "p_exact": 1.0
+    },
+    "RBF_NO_ROBUST": {
+      "a_only": 5,
+      "b_only": 3,
+      "p_exact": 0.7265625
+    },
+    "RBF_FROZEN": {
+      "a_only": 7,
+      "b_only": 5,
+      "p_exact": 0.7744140625
+    }
+  }
+}

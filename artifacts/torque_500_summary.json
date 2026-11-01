@@ -1,0 +1,341 @@
+{
+  "meta": {
+    "title": "LIBERO-Spatial custom torque-controller comparison",
+    "date": "2026-11-01",
+    "checkpoint": "moojink/openvla-7b-oft-finetuned-libero-spatial",
+    "task_suite": "libero_spatial",
+    "tasks": 10,
+    "trials_per_task": 50,
+    "episodes_per_method": 500,
+    "methods": 6,
+    "total_episodes": 3000,
+    "seed": 7,
+    "control_hz": 20,
+    "action_interface": "7-D end-effector delta + gripper, OSC goal generation, damped-least-squares IK, joint-torque control",
+    "paired_by": "task order [0..9] and episode index 0..49; same default initial-state array and checkpoint",
+    "note": "Task success only; no trajectory-level control metrics were logged. Near-ceiling success rates mean small differences are not discriminative.",
+    "artifacts": {
+      "torque_500_logs_export.tar.gz": {
+        "bytes": 214472,
+        "sha256": "d5d0144b92abc228bc401028694fd82fd71b34d7ddc1a158166e54f084695dee"
+      },
+      "torque_500_rollouts_2026_11_01.tar.gz": {
+        "bytes": 127041338,
+        "sha256": "30b2b5d7725fa3ef626ebd9100f5c829d7020681eda45f5f7b66ba0d2868b55e"
+      }
+    }
+  },
+  "task_names": [
+    "bowl between plate and spice rack",
+    "bowl next to spice rack",
+    "bowl center of table",
+    "bowl on cookie box",
+    "bowl in top drawer of wooden cabinet",
+    "bowl on spice rack",
+    "bowl next to cookie box",
+    "bowl on stove",
+    "bowl next to plate",
+    "bowl on wooden cabinet"
+  ],
+  "methods": {
+    "OSC": {
+      "episodes": 500,
+      "successes": 493,
+      "rate": 0.986,
+      "wilson95": [
+        0.9714,
+        0.9932
+      ],
+      "per_task_successes": [
+        50,
+        50,
+        50,
+        50,
+        48,
+        47,
+        50,
+        49,
+        50,
+        49
+      ],
+      "per_task_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.96,
+        0.94,
+        1.0,
+        0.98,
+        1.0,
+        0.98
+      ],
+      "completed_at": "2026-10-31 18:54 CST",
+      "description": "robosuite OSC baseline (unchanged)"
+    },
+    "CTC": {
+      "episodes": 500,
+      "successes": 493,
+      "rate": 0.986,
+      "wilson95": [
+        0.9714,
+        0.9932
+      ],
+      "per_task_successes": [
+        50,
+        50,
+        50,
+        50,
+        47,
+        46,
+        50,
+        50,
+        50,
+        50
+      ],
+      "per_task_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.94,
+        0.92,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "completed_at": "2026-11-01 01:54 CST",
+      "description": "computed torque control; ctc_kp=900, ctc_kd=66"
+    },
+    "SMC": {
+      "episodes": 500,
+      "successes": 495,
+      "rate": 0.99,
+      "wilson95": [
+        0.9768,
+        0.9957
+      ],
+      "per_task_successes": [
+        50,
+        50,
+        50,
+        50,
+        47,
+        48,
+        50,
+        50,
+        50,
+        50
+      ],
+      "per_task_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.94,
+        0.96,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "completed_at": "2026-11-01 03:00 CST",
+      "description": "sliding-mode control; lambda=10.44, ks_scale=2.10, rho_scale=1.89, phi=0.144"
+    },
+    "RBF_SMC": {
+      "episodes": 500,
+      "successes": 492,
+      "rate": 0.984,
+      "wilson95": [
+        0.9687,
+        0.9919
+      ],
+      "per_task_successes": [
+        50,
+        50,
+        50,
+        50,
+        48,
+        46,
+        50,
+        48,
+        50,
+        50
+      ],
+      "per_task_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.96,
+        0.92,
+        1.0,
+        0.96,
+        1.0,
+        1.0
+      ],
+      "completed_at": "2026-11-01 04:06 CST",
+      "description": "RBF adaptive sliding-mode control; lambda=13.62, ks_scale=1.48, rho_scale=1.70, phi=0.214, gamma=11.92"
+    },
+    "RBF_NO_ROBUST": {
+      "episodes": 500,
+      "successes": 491,
+      "rate": 0.982,
+      "wilson95": [
+        0.9661,
+        0.9905
+      ],
+      "per_task_successes": [
+        50,
+        50,
+        50,
+        50,
+        48,
+        45,
+        50,
+        48,
+        50,
+        50
+      ],
+      "per_task_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.96,
+        0.9,
+        1.0,
+        0.96,
+        1.0,
+        1.0
+      ],
+      "completed_at": "2026-11-01 05:16 CST",
+      "description": "RBF-SMC without the rho*clip(s/phi) robust term; same RBF_SMC config"
+    },
+    "RBF_FROZEN": {
+      "episodes": 500,
+      "successes": 491,
+      "rate": 0.982,
+      "wilson95": [
+        0.9661,
+        0.9905
+      ],
+      "per_task_successes": [
+        50,
+        50,
+        50,
+        50,
+        48,
+        48,
+        50,
+        48,
+        50,
+        47
+      ],
+      "per_task_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.96,
+        0.96,
+        1.0,
+        0.96,
+        1.0,
+        0.94
+      ],
+      "completed_at": "2026-11-01 06:23 CST",
+      "description": "RBF-SMC with weight updates frozen after 3 s (60 control steps at 20 Hz); same RBF_SMC config"
+    }
+  },
+  "pairwise": {
+    "CTC_vs_SMC": {
+      "a_only": 1,
+      "b_only": 3,
+      "discordant": 4,
+      "p_exact": 0.625
+    },
+    "CTC_vs_RBF_SMC": {
+      "a_only": 6,
+      "b_only": 5,
+      "discordant": 11,
+      "p_exact": 1.0
+    },
+    "CTC_vs_RBF_NO_ROBUST": {
+      "a_only": 5,
+      "b_only": 3,
+      "discordant": 8,
+      "p_exact": 0.7265625
+    },
+    "CTC_vs_RBF_FROZEN": {
+      "a_only": 6,
+      "b_only": 4,
+      "discordant": 10,
+      "p_exact": 0.75390625
+    },
+    "SMC_vs_RBF_SMC": {
+      "a_only": 5,
+      "b_only": 2,
+      "discordant": 7,
+      "p_exact": 0.453125
+    },
+    "SMC_vs_RBF_NO_ROBUST": {
+      "a_only": 6,
+      "b_only": 2,
+      "discordant": 8,
+      "p_exact": 0.2890625
+    },
+    "SMC_vs_RBF_FROZEN": {
+      "a_only": 7,
+      "b_only": 3,
+      "discordant": 10,
+      "p_exact": 0.34375
+    },
+    "RBF_SMC_vs_RBF_NO_ROBUST": {
+      "a_only": 5,
+      "b_only": 4,
+      "discordant": 9,
+      "p_exact": 1.0
+    },
+    "RBF_SMC_vs_RBF_FROZEN": {
+      "a_only": 6,
+      "b_only": 5,
+      "discordant": 11,
+      "p_exact": 1.0
+    },
+    "RBF_NO_ROBUST_vs_RBF_FROZEN": {
+      "a_only": 4,
+      "b_only": 4,
+      "discordant": 8,
+      "p_exact": 1.0
+    }
+  },
+  "pairwise_vs_OSC": {
+    "CTC": {
+      "a_only": 4,
+      "b_only": 4,
+      "p_exact": 1.0
+    },
+    "SMC": {
+      "a_only": 2,
+      "b_only": 4,
+      "p_exact": 0.6875
+    },
+    "RBF_SMC": {
+      "a_only": 4,
+      "b_only": 3,
+      "p_exact": 1.0
+    },
+    "RBF_NO_ROBUST": {
+      "a_only": 5,
+      "b_only": 3,
+      "p_exact": 0.7265625
+    },
+    "RBF_FROZEN": {
+      "a_only": 7,
+      "b_only": 5,
+      "p_exact": 0.7744140625
+    }
+  }
+}
