@@ -5,6 +5,8 @@ converts them to a Cartesian goal.  This wrapper keeps that goal, solves a
 damped-least-squares IK for a joint target, and replaces the OSC torque law
 with CTC / SMC / RBF-SMC from the course project.
 """
+import os
+import math
 import numpy as np
 import mujoco
 from robosuite.utils.control_utils import orientation_error
@@ -28,16 +30,27 @@ class TorqueControllerWrapper:
         self.rho = np.array([3, 3, 2, 2, .5, .5, .2]) * self.c.get("rho_scale", 1.)
         self.last_tau = np.zeros(7)
         self._steps = 0
+        self._qtar = None
+        self._goal_key = None
+        self._qref = None
+        self.debug = bool(self.c.get("debug", False)) or os.environ.get("TORQUE_DEBUG") == "1"
 
     def __getattr__(self, name):
         return getattr(self.osc, name)
 
     def set_goal(self, action, **kwargs):
+        self._qtar = None
+        self._goal_key = None
+        if self.debug:
+            print(f"[torque-goal] action={np.round(action, 4)}", flush=True)
         return self.osc.set_goal(action, **kwargs)
 
     def reset_goal(self):
         self.W[:] = 0.
         self._steps = 0
+        self._qtar = None
+        self._goal_key = None
+        self._qref = None
         return self.osc.reset_goal()
 
     def _forward(self, qpos, qvel):
@@ -55,22 +68,37 @@ class TorqueControllerWrapper:
         q = q0.copy()
         lo = self.m.jnt_range[self.qidx, 0] + .01
         hi = self.m.jnt_range[self.qidx, 1] - .01
-        for _ in range(80):
-            d = mujoco.MjData(self.m)
-            d.qpos[:] = self.sim.data._data.qpos
+        d = mujoco.MjData(self.m)
+        d.qpos[:] = self.sim.data._data.qpos
+        d.qvel[:] = 0
+        jp = np.zeros((3, self.m.nv))
+        jr = np.zeros((3, self.m.nv))
+        for _ in range(40):
             d.qpos[self.qidx] = q
-            d.qvel[:] = 0
             mujoco.mj_forward(self.m, d)
             dp = np.array(target_pos) - d.site_xpos[self.site_id]
             do = orientation_error(np.array(target_ori), d.site_xmat[self.site_id].reshape(3, 3))
             err = np.r_[dp, do]
             if np.linalg.norm(err) < 1e-4:
                 break
-            jp = np.zeros((3, self.m.nv)); jr = np.zeros((3, self.m.nv))
             mujoco.mj_jacSite(self.m, d, jp, jr, self.site_id)
             J = np.vstack([jp[:, self.vidx], jr[:, self.vidx]])
             dq = J.T @ np.linalg.solve(J @ J.T + 1e-3 * np.eye(6), err)
             q = np.clip(q + .5 * dq, lo, hi)
+        if self.debug and self._steps % 500 == 1:
+            dd = mujoco.MjData(self.m)
+            dd.qpos[:] = self.sim.data._data.qpos
+            dd.qpos[self.qidx] = q
+            mujoco.mj_forward(self.m, dd)
+            dp = np.array(target_pos) - dd.site_xpos[self.site_id]
+            do = orientation_error(np.array(target_ori), dd.site_xmat[self.site_id].reshape(3, 3))
+            print(
+                "[torque-ik] step={} |dp|={:.5f} |do|={:.5f} target={} site={}".format(
+                    self._steps, float(np.linalg.norm(dp)), float(np.linalg.norm(do)),
+                    np.round(target_pos, 4), np.round(dd.site_xpos[self.site_id], 4)
+                ),
+                flush=True,
+            )
         return q
 
     def run_controller(self):
@@ -82,11 +110,24 @@ class TorqueControllerWrapper:
         vfull = d.qvel.copy()
         q = qfull[self.qidx].copy()
         v = vfull[self.vidx].copy()
-        qtar = self._ik(q, o.goal_pos, o.goal_ori)
-        dt = .05
-        dqd = (qtar - q) / dt
-        dqd = np.clip(dqd, -2.0, 2.0)
-        qd = qtar
+        goal_key = (np.asarray(o.goal_pos).tobytes(), np.asarray(o.goal_ori).tobytes())
+        if self._qtar is None or goal_key != self._goal_key:
+            self._qtar = self._ik(q, o.goal_pos, o.goal_ori)
+            self._goal_key = goal_key
+        qtar = self._qtar
+        dt = float(self.m.opt.timestep)
+        if self._qref is None:
+            self._qref = q.copy()
+        qref_prev = self._qref.copy()
+        # First-order reference filter: the IK target is a step, but feeding
+        # the step directly into a high-gain torque law saturates the joints.
+        # Smooth it at the simulator substep rate, then use its derivative as
+        # the reference velocity for CTC/SMC.
+        ref_tau = float(self.c.get("ref_tau", .1))
+        alpha = 1. - math.exp(-dt / max(ref_tau, 1e-6))
+        self._qref += alpha * (qtar - self._qref)
+        qd = self._qref.copy()
+        dqd = np.clip((qd - qref_prev) / dt, -2., 2.)
         ddqd = np.zeros(7)
         e = q - qd
         de = v - dqd
@@ -121,10 +162,49 @@ class TorqueControllerWrapper:
                     self.W += dt * (-self.c.get("gamma", 8.) * np.outer(s, phi) - .02 * self.W)
                     self.W *= min(1, 50 / max(np.linalg.norm(self.W), 1e-12))
         self.last_tau = tau
+        if self.debug and self._steps % 500 == 1:
+            print(
+                "[torque-debug] step={} q_err={:.4f} ee_err={:.4f} "
+                "|tau|={:.2f} max|tau|={:.2f} q={} qtar={} ee={} goal={}".format(
+                    self._steps,
+                    float(np.linalg.norm(e)),
+                    float(np.linalg.norm(o.ee_pos - o.goal_pos)),
+                    float(np.linalg.norm(tau)),
+                    float(np.max(np.abs(tau))),
+                    np.round(q, 3),
+                    np.round(qtar, 3),
+                    np.round(o.ee_pos, 3),
+                    np.round(o.goal_pos, 3),
+                ),
+                flush=True,
+            )
         o.new_update = True
         return tau
 
 
 def install(env, method, config):
-    env.robots[0].controller = TorqueControllerWrapper(env.robots[0].controller, method, config)
+    """Install the torque wrapper and keep it installed across env.reset().
+
+    robosuite's ``env.reset()`` rebuilds the robot (and its
+    OperationalSpaceController) rather than only resetting the existing
+    instance.  Wrapping ``env.robots[0].controller`` once is therefore not
+    enough: the wrapper is silently discarded before the first control step of
+    every episode.  Wrap ``env.reset`` so the current robot's newly created OSC
+    controller is wrapped immediately after every reset.
+    """
+    if not getattr(env, "_torque_wrapper_installed", False):
+        original_reset = env.reset
+
+        def reset_and_wrap(*args, **kwargs):
+            result = original_reset(*args, **kwargs)
+            robot = env.robots[0]
+            robot.controller = TorqueControllerWrapper(robot.controller, method, config)
+            return result
+
+        env.reset = reset_and_wrap
+        env._torque_wrapper_installed = True
+
+    robot = env.robots[0]
+    if not isinstance(robot.controller, TorqueControllerWrapper):
+        robot.controller = TorqueControllerWrapper(robot.controller, method, config)
     return env

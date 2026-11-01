@@ -4,7 +4,7 @@
 
 ## 文件
 
-- `libero_torque_wrapper.py`：替换 robosuite OSC 的力矩律；保留 OSC 的笛卡尔目标，用阻尼最小二乘 IK 求 7 关节参考，以 20 Hz 计算 CTC / SMC / RBF-SMC。
+- `libero_torque_wrapper.py`：替换 robosuite OSC 的力矩律；保留 OSC 的笛卡尔目标，用阻尼最小二乘 IK 求 7 关节参考，以 20 Hz 计算 CTC / SMC / RBF-SMC。`install()` 必须包住 `env.reset()`：robosuite 每次 reset 都会重建 robot 和 OSC，只在创建后替换一次会被 reset 丢掉。
 - `libero_torque_eval.py`：加载 OpenVLA-OFT/LIBERO 评测入口；在每个环境创建后安装包装器。
 - `selected.json`：本机冻结后用于远程实验的控制器参数；`RBF_NO_ROBUST` 和 `RBF_FROZEN` 沿用 `RBF_SMC` 参数。
 - `run_torque_eval.sh`、`run_torque_queue.sh`、`run_post_queue.sh`、`run_torque_pilot.sh`：远程队列脚本，保留原始路径供核对。
@@ -45,6 +45,15 @@ python remote/summarize_torque_results.py \
   --out /root/torque_core_summary.json
 ```
 
-## 结果边界
+## 结果边界与接入 bug
 
-各方法 500 回合的成功率为 98.2%–99.0%，与 OSC 基线 98.6% 没有统计显著差异；任务成功率接近天花板，不能据此宣称 RBF-SMC 更优。当前包装器没有记录轨迹级控制指标，下一轮应先补关节/末端误差、IK 残差、力矩 RMS/饱和和接触力，再做扰动实验。
+2026-11-01 的 5×500 批次**无效**：robosuite 的 `env.reset()` 会重建 robot 和 `OperationalSpaceController`，旧 `install()` 只在环境创建后替换一次，reset 后包装器被丢掉；因此名义 CTC/SMC/RBF-SMC 实际都是 OSC，旧日志不能作为控制器结果。
+
+修复后的 `install()` 已包住 `env.reset()`，诊断输出为：
+
+```text
+after reset: TorqueControllerWrapper
+after step:  TorqueControllerWrapper, _steps=25, ||tau||=26.77
+```
+
+此外，`run_controller()` 在 500 Hz 子步调用，不能把 `(qtar-q)/dt`（按 20 Hz 取的 dt）当速度前馈；当前版本令 `dqd=0`，由 CTC/SMC 的 PD/滑模项跟踪 IK 阶跃目标。修复后的正确批次尚未完成：CTC 10 回合 pilot 在任务 0 失败；调试显示控制器在运行但力矩饱和，移动目标上的 IK 位置残差约 2.5 cm，随后远程实例失联。下一步应先诊断 IK 可达性/奇异位形/迭代收敛，再跑 pilot，确认 episode 正常结束后才扩大。当前包装器没有记录完整的轨迹级控制指标，下一轮应补关节/末端误差、IK 残差、力矩 RMS/饱和和接触力，再做扰动实验。完整审计见 `docs/远程LIBERO控制器对比结果.md`。

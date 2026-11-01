@@ -1,128 +1,159 @@
-# 远程 LIBERO-Spatial 自定义力矩控制器对照
+# 远程 LIBERO-Spatial 控制器接入审计
 
-更新时间：2026-11-01。实例：Matpool，A100-PCIE-40GB，Ubuntu 22.04，Python 3.10.14。检查点：`moojink/openvla-7b-oft-finetuned-libero-spatial`。
+更新时间：2026-11-01 08:50。实例：Matpool，A100-PCIE-40GB。
 
-## 结论摘要
+## 0. 当前结论
 
-- 在同一个 OpenVLA-OFT 检查点、同一套 LIBERO-Spatial 任务和同一组初始状态上，完成了 6 个方法各 500 回合，共 **3000 回合**：原始 OSC 基线 493/500（98.6%），CTC 493/500（98.6%），SMC 495/500（99.0%），RBF-SMC 492/500（98.4%），RBF-SMC 去鲁棒项 491/500（98.2%），RBF-SMC 三秒后冻结权值 491/500（98.2%）。
-- 所有运行均正常结束（`EXIT:0`），自定义力矩控制器确实接入了 LIBERO/robosuite 的在线执行链路；此前每个方法的 10 回合 pilot 也都是 10/10。
-- **没有检出控制器之间的任务成功率差异。** 与 OSC 基线的配对 McNemar 精确检验 p=0.688–1.000；五个自定义方法之间的两两比较 p=0.289–1.000。观察到的差异只有 1–4 个回合，落在 500 回合抽样的不确定性内。
-- 这是一组**任务成功率已经接近天花板**的负结果/不结论结果，不能写成“RBF-SMC 优于 CTC/OSC”。它说明在这套 VLA 任务上，仅用成功/失败无法区分底层控制器；要检验控制假设，必须记录轨迹级指标并在更困难的扰动工况下比较。
-- 原始 `summarize_torque_results.py` 对 rich/ANSI 日志的正则解析失败（曾生成 `"error": "no final result"`）。本次已改为逐行解析 `>> Total episodes`、`>> Total successes` 和 `>> Success: True/False`，重新生成汇总 JSON。
+**原计划用于比较 CTC/SMC/RBF-SMC 的 5×500 回合批次无效：实际执行的是 robosuite 原始 OSC，不是自定义力矩控制器。** 事后诊断发现，robosuite 的 `env.reset()` 会重建 robot 和它的 `OperationalSpaceController`；原 `install()` 只在环境创建后替换一次 `env.robots[0].controller`，第一次 `env.reset()` 就把包装器丢掉了。因此之前记录的 98.2%–99.0% 只是 OSC 的重复评测，不能作为控制器对比证据。
 
-## 1. 实验协议
+诊断证据（同一环境）：
 
-- 任务套件：`libero_spatial`，10 个任务，每个任务 50 个默认初始状态，共 500 回合/方法。
-- 任务顺序固定为 `[0, 1, ..., 9]`；每个任务按 `episode_idx=0..49` 使用 `task_suite.get_task_init_states(task_id)` 返回的同一组初始状态。随机种子为 7。
-- VLA 动作接口不变：7 维末端执行器增量 + 1 维夹爪；动作块长度为 8。VLA 仍然通过 robosuite OSC 的 `set_goal` 生成笛卡尔目标。
-- 自定义控制器保留该笛卡尔目标，用阻尼最小二乘 IK 求 7 个关节的目标位置，再以 20 Hz 计算关节力矩。替换的只是 OSC 的力矩律，VLA 策略、相机输入、任务评分和动作尺度都没有改。
-- 共享代码：`remote/libero_torque_wrapper.py`、`remote/libero_torque_eval.py`。安装方式是在每个环境创建后替换 `env.robots[0].controller`；robosuite 的 `SingleArm.control()` 会调用包装器的 `set_goal()` 和 `run_controller()`。
-- 参数来自本机调参后冻结的 `selected.json`：
+```text
+before install: OperationalSpaceController
+after install:  TorqueControllerWrapper
+after env.reset: OperationalSpaceController   # 原实现，包装器被丢掉
+```
 
-|方法|说明|关键参数|
-|---|---|---|
-|OSC|robosuite 原始操作空间控制器，未修改|—|
-|CTC|计算力矩控制|`ctc_kp=900`，`ctc_kd=66`|
-|SMC|滑模控制|`lambda=10.44`，`ks_scale=2.10`，`rho_scale=1.89`，`phi=0.144`|
-|RBF-SMC|RBF 自适应滑模|`lambda=13.62`，`ks_scale=1.48`，`rho_scale=1.70`，`phi=0.214`，`gamma=11.92`|
-|RBF-SMC 无鲁棒项|去掉 `rho*clip(s/phi)`，保留 RBF 自适应|沿用 RBF-SMC 参数|
-|RBF-SMC 冻结|前 3 s（60 个控制步）更新权值，之后冻结|沿用 RBF-SMC 参数|
+修复后重新验证：
 
-## 2. 总结果
+```text
+after reset: TorqueControllerWrapper
+after step:  TorqueControllerWrapper, _steps=25, ||tau||=26.77
+```
 
-|方法|成功/500|成功率|Wilson 95% 区间|完成时间（CST）|
-|---|---:|---:|---|---|
-|OSC 基线|493|98.6%|[97.1%, 99.3%]|2026-10-31 18:54|
-|CTC|493|98.6%|[97.1%, 99.3%]|2026-11-01 01:54|
-|SMC|495|99.0%|[97.7%, 99.6%]|2026-11-01 03:00|
-|RBF-SMC|492|98.4%|[96.9%, 99.2%]|2026-11-01 04:06|
-|RBF-SMC 无鲁棒项|491|98.2%|[96.6%, 99.1%]|2026-11-01 05:16|
-|RBF-SMC 冻结|491|98.2%|[96.6%, 99.1%]|2026-11-01 06:23|
+**正确批次尚未完成。** 旧数字、旧报告结论和基于它们的“RBF-SMC 与 OSC 无差异”说法全部撤回；不能用这批数据支持或反驳任何控制器假设。原始 OSC 基线 493/500（98.6%）本身仍然有效，因为它就是 OSC。
 
-相对 OSC 的绝对差分别为 0.0、+0.4、−0.2、−0.4、−0.4 个百分点。所有区间高度重叠；在 500 回合下，约 1 个百分点的差异本来就不容易分辨。
+## 1. 原批次记录（无效）
 
-## 3. 逐任务结果
+这批日志仍保留用于审计，但不能当作五个控制器的结果。
 
-表中为每个任务 50 回合中的成功数。
+|名义方法|成功/500|实际控制器|状态|
+|---|---:|---|---|
+|OSC 基线|493|OSC|有效基线|
+|名义 CTC|493|OSC（reset 后）|无效|
+|名义 SMC|495|OSC（reset 后）|无效|
+|名义 RBF-SMC|492|OSC（reset 后）|无效|
+|名义 RBF-SMC 无鲁棒项|491|OSC（reset 后）|无效|
+|名义 RBF-SMC 冻结|491|OSC（reset 后）|无效|
 
-|任务|OSC|CTC|SMC|RBF-SMC|无鲁棒项|冻结|
-|---|---:|---:|---:|---:|---:|---:|
-|0 盘子和调料架之间|50|50|50|50|50|50|
-|1 调料架旁|50|50|50|50|50|50|
-|2 桌子中央|50|50|50|50|50|50|
-|3 饼干盒上|50|50|50|50|50|50|
-|4 木柜上层抽屉|48|47|47|48|48|48|
-|5 调料架上|47|46|48|46|45|48|
-|6 饼干盒旁|50|50|50|50|50|50|
-|7 炉灶上|49|50|50|48|48|48|
-|8 盘子旁|50|50|50|50|50|50|
-|9 木柜上|49|50|50|50|50|47|
+五组名义方法的差异只有 1–4 个回合，和“它们其实是同一个 OSC 控制器”完全一致；这也说明 OSC/VLA 自身存在约 1 个百分点的 run-to-run 波动。它不能用来证明控制器等价，更不能用来证明某个控制器更优。
 
-失败集中在任务 4、5、7、9，其中任务 5 对所有方法都最难。没有出现“某个控制器在一个任务上系统性失败、另一个控制器全过”的模式；这更像任务初始状态和 VLA 动作本身的难度，而不是底层控制器造成的分化。
+## 2. 根因
 
-## 4. 配对统计
+`run_libero_eval.py` 的每个 episode 都从 `env.reset()` 开始：
 
-因为同一任务使用同一组初始状态、同一检查点和同一动作接口，按任务与 episode index 对成功/失败做配对是合理的；下表给出精确 McNemar 检验（双侧，零假设为两种方法在 discordant 回合上等概率）。
+```python
+# experiments/robot/libero/run_libero_eval.py, run_episode()
+env.reset()
+obs = env.set_init_state(initial_state)
+```
 
-|比较（基准为 OSC）|OSC 成功、方法失败|OSC 失败、方法成功|精确 p|
-|---|---:|---:|---:|
-|CTC|4|4|1.000|
-|SMC|2|4|0.688|
-|RBF-SMC|4|3|1.000|
-|RBF-SMC 无鲁棒项|5|3|0.727|
-|RBF-SMC 冻结|7|5|0.774|
+robosuite 的 reset 链路会重新加载控制器：
 
-五个自定义方法之间的 10 组两两比较，discordant 回合数为 4–11，精确 p=0.289–1.000；最小的是 SMC 对 RBF-SMC 无鲁棒项（p=0.289），仍未达到 0.05。完整结果在 `artifacts/torque_500_pairwise_stats.json`。
+```text
+OffScreenRenderEnv.reset()
+  -> robot.reset()
+     -> Robot.reset()
+        -> self._load_controller()
+           -> self.controller = controller_factory(OSC_POSE, ...)
+```
 
-需要强调：配对检验只能说明“在这批数据中没有检出差异”，不能证明两种控制器等价。500 回合/方法的 95% 区间宽度约 ±1 个百分点，若真实差异小于这个量级，需要更多回合或更敏感的指标。
+原实现只在 `get_libero_env()` 返回后做一次：
 
-## 5. 如何解释这组结果
+```python
+env.robots[0].controller = TorqueControllerWrapper(env.robots[0].controller, ...)
+```
 
-1. **任务成功率接近天花板。** OSC 基线已经 98.6%，500 回合中的失败只有 7 个；任何底层改进最多也只能挽回几个回合。用成功率作为主指标，信噪比很低。
-2. **VLA 任务对底层力矩律不敏感。** 在这个评测里，VLA 以约 20 Hz 给出较平滑的末端目标，IK 后的关节参考变化有限；CTC、SMC 和 RBF-SMC 都能把关节误差压得很小，差异没有大到改变抓取/放置的离散成功判定。
-3. **消融没有显示 RBF 自适应的收益。** RBF-SMC 与“无鲁棒项”“冻结权值”的成功数几乎相同（492/491/491），两两 p 均为 1.000。这并不证明 RBF 项无效；更可能是当前任务没有提供足够的持续激励、负载变化或扰动，让自适应项产生可测的任务级差异。
-4. **失败是任务相关的。** 任务 5 对所有方法都最难（45–48/50），任务 4、7、9 也各有少量失败；没有看到控制器专属的失败模式。因此不能把某个方法的 1–2 个额外失败解释成控制性能下降。
-5. **这是一组重要的负结果。** 它支持“底层控制器接入是可行的、没有破坏 VLA 闭环”这一结论，但不支持“RBF-SMC 在 VLA 任务上更优”。论文中应如实写成“任务成功率饱和，未检出差异”，并把控制层指标和扰动实验作为下一步证据。
+第一次 `env.reset()` 后 `env.robots[0]` 甚至是一个新的 robot 实例（实测 `env.robots[0] is old_robot == False`），所以旧 robot 上的补丁也不会生效。此后所有控制步都由新的 OSC 执行。
 
-## 6. 局限
+## 3. 修复
 
-- 只测了任务成功/失败，没有记录关节跟踪误差、末端误差、力矩 RMS、力矩饱和比例、IK 残差、接触力或夹爪滑移。因此无法判断各控制器在“成功回合”内部的跟踪质量差异。
-- 只有一个检查点、一个 LIBERO 套件、一个评测种子；500 回合/方法是评测回合数，不是 500 个独立训练种子。
-- 没有做负载、摩擦、动作噪声、观测噪声、执行延迟等扰动；LIBERO-Spatial 的成功率已经饱和，不适合作为区分控制器的困难工况。
-- 控制器参数来自本机 MuJoCo 调参后冻结，没有在 LIBERO 上重新调参；这保证了比较是“同一套参数”的受控比较，但不代表每个方法都达到其在 LIBERO 上的最佳性能。
-- 包装器使用阻尼最小二乘 IK，未记录关节限位触发、奇异位形和力矩裁剪统计；这些都可能掩盖控制器差异。
-- 逐任务表是描述性结果，未做多重比较校正；不过所有整体比较都不显著，校正不会改变结论。
-- 视频只用于人工复核，不作为自动成功判定的一部分。
+`remote/libero_torque_wrapper.py` 的 `install()` 现在包住 `env.reset`：
 
-## 7. 产物与复现
+```python
+original_reset = env.reset
 
-本机：
+def reset_and_wrap(*args, **kwargs):
+    result = original_reset(*args, **kwargs)
+    robot = env.robots[0]
+    robot.controller = TorqueControllerWrapper(robot.controller, method, config)
+    return result
 
-- `artifacts/torque_500_logs_export.tar.gz`（210 KB）：6 份完整评测日志、pilot 日志、`torque_core_summary.json`、`torque_pairwise_stats.json`、`selected.json`、队列脚本和两份控制器源码。
-- `artifacts/torque_500_rollouts_2026_11_01.tar.gz`（121 MB）：2026-11-01 的 2550 个 rollout MP4；SHA-256 `30b2b5d7725fa3ef626ebd9100f5c829d7020681eda45f5f7b66ba0d2868b55e`。
-- `artifacts/torque_500_summary.json`：合并后的总表、逐任务成功数、Wilson 区间、配置说明和产物校验和。
-- `artifacts/torque_500_pairwise_stats.json`：两两 McNemar 结果。
-- `remote/summarize_torque_results.py`：修正后的逐行日志解析器；本次已用它在真实日志上复核总成功率、逐任务成功率和 `EXIT:0`。
+env.reset = reset_and_wrap
+```
 
-远程（实例仍在时）：
+同时做了两项性能修复，否则 500 回合不可行：
 
-- 日志：`/root/eval_torque_{CTC,SMC,RBF_SMC,RBF_NO_ROBUST,RBF_FROZEN}_t50.log`，基线 `/root/eval_spatial_t50.log`。
-- 汇总：`/root/torque_core_summary.json`、`/root/torque_pairwise_stats.json`。
-- 代码：`/root/openvla-oft/experiments/robot/libero/libero_torque_wrapper.py`、`libero_torque_eval.py`。
-- 队列：`/root/run_torque_queue.sh`、`/root/run_post_queue.sh`；完成标记 `ALL_ABLATIONS_DONE Sun Nov 1 06:23:00 CST 2026`。
+- IK 目标按笛卡尔 goal 缓存，每个策略步只解一次，而不是每个 20 Hz 控制子步都解 80 次；
+- IK 复用同一个 `MjData`，迭代上限从 80 降到 40，并在误差小于 `1e-4` 时提前退出。
 
-复现单方法：
+修复后在无模型推理的空动作测试中，`env.step` 约 0.08–0.1 s；修复前约 0.5 s/步（旧 pilot 约 2 分钟/回合）。这仍比 OSC 慢，完整 5×500 需要重新评估时间预算。
+
+2026-11-01 08:53 又修正了一处控制律问题：初版包装器把 `(qtar - q) / dt` 作为速度前馈，但 `run_controller()` 实际以 500 Hz 的子步调用，而 `dt` 按 20 Hz 写成 0.05 s；该前馈在仿真子步上过大，容易把关节推向饱和。修复后 `dqd=0`，由 CTC/SMC 的 PD/滑模项直接跟踪 IK 阶跃目标。初版修复的 pilot 在任务 0 连续 3 次失败后已停止；改用 `dqd=0` 的 v2 pilot 第一个 episode 仍失败（08:55 前，日志 `/root/fixed_CTC_t1_v2.log`），说明问题不只是速度前馈。
+
+调试 telemetry（`TORQUE_DEBUG=1`）显示自定义控制器确实在执行，但 CTC 输出严重饱和：
+
+```text
+[torque-debug] step=1   q_err=0.0370 ee_err=0.0000 |tau|=184.99 max|tau|=151.46
+[torque-debug] step=501 q_err=0.3001 ee_err=0.0532 |tau|=236.35 max|tau|=174.96
+```
+
+随后加入一阶参考滤波（`ref_tau=0.1`，默认；可配置），非 VLA 的空动作跟踪测试里关节误差降到约 `1e-4`、力矩峰值降到约 50（未饱和），但末端仍有约 2.5 cm 的稳态误差；`_ik` 在移动目标上记录了约 2.5 cm 的位置残差（`|do|` 很小），说明 IK 在连续移动目标/接近奇异位形时需要进一步检查迭代、阻尼和关节限位，而不是简单加大增益。另一个 `ref_tau=0.02` 的测试仍未消除这 2.5 cm 残差，问题更像 IK 收敛/可达性而不是滤波器。
+
+远程实例在 2026-11-01 09:00 左右的 IK 收敛测试中失联：TCP 端口仍可连接，但 SSH 在密钥交换阶段被远端关闭（`kex_exchange_identification: Connection closed by remote host`）。修复后的 pilot 因此中断；在恢复实例前无法继续确认 IK 残差或跑正式批次。
+
+## 4. 正确批次的当前状态
+
+- 修复后的 CTC 10 回合 pilot（10 tasks × 1 trial）没有通过：`fixed_CTC_t1_v2.log` 第一个 episode 仍然失败；调试确认控制器在跑（`_steps`/`tau` 非零），但 CTC 力矩饱和，随后又暴露出移动目标上的 IK 位置残差约 2.5 cm。初版 `fixed_CTC_t1.log` 在任务 0 连续 3 次失败后已停止，不作为结果。
+- 一阶参考滤波和 `ref_tau` 调整只降低了力矩峰值/关节跟踪误差，没有消除 IK 的 2.5 cm 残差；下一步应检查 IK 的可达性、奇异位形、阻尼和关节限位，而不是继续调增益。
+- 2026-11-01 09:00 左右远程实例失联；pilot 中断，无法继续调试或重跑。当前没有可报告的自定义控制器成功率。
+- 修复后尚未重跑 5×500 正式批次；旧 `/root/eval_torque_*_t50.log`、`/root/torque_core_summary.json` 和 `artifacts/torque_500_*` 仍保留，但已标记为无效/OSC 重复；不要在新报告或论文中引用其“方法差异”。
+- 原有的 OSC 500 回合基线（`/root/eval_spatial_t50.log`，493/500）有效，继续作为基线。
+
+## 5. 影响与下一步
+
+1. **撤回旧结论。** 旧报告中“CTC/SMC/RBF-SMC 与 OSC 相当”“RBF-SMC 未显示收益”等表述全部不成立；那批数据没有接入自定义控制器。
+2. **先验证修复后的 10 回合 pilot。** 如果 pilot 正常，再决定正式矩阵规模；不能再把一次 500 回合当成“已经完成”。
+3. **正式批次加轨迹级遥测。** 记录关节/末端跟踪误差、IK 残差、力矩 RMS/饱和、接触力和夹爪滑移；只测成功/失败无法区分控制器，而且当前任务成功率本来就会饱和。
+4. **重估时间预算。** 修复后自定义控制器的单步开销高于 OSC；5 个方法 ×500 回合可能超过 6 小时。可选方案是先在 10 任务 ×10–20 回合 ×5 方法上做配对遥测，再对最有希望的方法扩大到 500 回合。
+5. **保留 OSC 基线。** 493/500 是有效数据；但不要把它和无效的“自定义方法”表混在一起。
+
+## 6. 产物
+
+有效：
+
+- `artifacts/libero_spatial_500_export.tar.gz`：原始 OSC 500 回合基线（36MB，含视频、日志、环境说明）。
+- `docs/远程LIBERO基线结果.md`：有效基线结果。
+
+无效/仅审计：
+
+- `/root/eval_torque_{CTC,SMC,RBF_SMC,RBF_NO_ROBUST,RBF_FROZEN}_t50.log`：名义控制器日志，实际为 OSC。
+- `artifacts/torque_500_logs_export.tar.gz`：上述无效日志的归档；JSON 已加 `valid=false`。
+- `artifacts/torque_500_rollouts_2026_11_01.tar.gz`：对应 2550 个视频，实际也是 OSC；仅作审计/负对照。
+- `artifacts/torque_500_summary.json`、`artifacts/torque_500_pairwise_stats.json`：已标记无效，不再作为控制器结果。
+
+修复代码：
+
+- `remote/libero_torque_wrapper.py`：包住 `env.reset`，并缓存 IK。
+- `remote/libero_torque_eval.py`：评测入口不变。
+- `remote/README.md`：远程复现说明；其中“结果边界”已改写。
+
+## 7. 复现诊断
 
 ```bash
 cd /root/openvla-oft/experiments/robot/libero
-python libero_torque_eval.py --method CTC --trials 50
-python libero_torque_eval.py --method SMC --trials 50
-python libero_torque_eval.py --method RBF_SMC --trials 50
+python - <<'PY'
+import run_libero_eval as rle
+from libero.libero import benchmark
+from libero_torque_wrapper import install
+suite = benchmark.get_benchmark_dict()["libero_spatial"]()
+task = suite.get_task(0)
+env, _ = rle.get_libero_env(task, "openvla", 256)
+print("before:", type(env.robots[0].controller).__name__)
+install(env, "CTC", {"ctc_kp": 900., "ctc_kd": 66.})
+env.reset()
+print("after reset:", type(env.robots[0].controller).__name__)
+PY
 ```
 
-## 8. 下一步
-
-1. **先补轨迹级指标，不要重复 500 回合成功率。** 在包装器里记录每步的关节位置/速度、IK 目标与残差、末端位置/姿态误差、力矩、力矩饱和、夹爪指令和接触力；先跑 10 任务 × 10 回合 × 5 方法 = 500 回合的配对遥测批次，比较控制层分布。
-2. **再做困难工况。** 在 LIBERO 或本地接触平台上加入负载、摩擦、动作噪声、观测噪声和执行延迟；这些条件才可能让控制器差异转化为任务成功率差异。若仍只在 LIBERO-Spatial 上跑，成功率会继续饱和。
-3. **保持当前结论的边界。** 目前能说的是：自定义 CTC/SMC/RBF-SMC 已成功接入闭环，任务成功率与 OSC 基线相当；不能说的是：RBF-SMC 更好、控制器差异已被证明不存在、或这套结果可外推到其他套件/硬件。
-4. **数据已导出。** 紧凑日志和 2026-11-01 的 rollout 视频已下载到本机 `artifacts/`；如果清空 Matpool 实例，仍可用 `artifacts/LIBERO_SETUP_NOTES.md` 重建环境，但需要重新下载 15 GB 检查点。
+期望输出 `after reset: TorqueControllerWrapper`；若仍看到 `OperationalSpaceController`，说明安装仍被 reset 覆盖，不能开始正式批次。

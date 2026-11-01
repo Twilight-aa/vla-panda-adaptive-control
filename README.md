@@ -1,10 +1,10 @@
-> **2026-11-01 远程实验更新：** LIBERO-Spatial 原始 OSC 基线 493/500（98.6%）；CTC、SMC、RBF-SMC、RBF-SMC 无鲁棒项、RBF-SMC 冻结权值各 500 回合，成功率 98.2%–99.0%，与基线没有统计显著差异（相对 OSC 的配对 McNemar p≥0.69；所有两两比较 p≥0.29）。自定义力矩控制器已接入闭环，但当前只测任务成功，成功率接近天花板；不能据此宣称 RBF-SMC 更优。详见 `docs/远程LIBERO控制器对比结果.md`。
+> **2026-11-01 08:50 更正：** 原计划的 5×500 自定义力矩控制器批次**无效**。robosuite 的 `env.reset()` 会重建 robot 和 OSC 控制器，旧 `install()` 只在环境创建后替换一次，reset 后包装器被丢掉；因此那批“CTC/SMC/RBF-SMC”实际都跑了 OSC，98.2%–99.0% 不能作为控制器结果。修复后的包装器已通过诊断（`after reset: TorqueControllerWrapper`，控制步已执行），但修复后的 CTC pilot 首个 episode 仍失败；调试显示力矩饱和/移动目标 IK 残差约 2.5 cm，随后远程实例失联。OSC 基线 493/500（98.6%）仍有效。详见 `docs/远程LIBERO控制器对比结果.md`。
 >
 > **2026-10-31 本机任务完成：请先阅读 `docs/本机任务完成情况.md` 和上一级目录的《项目交接文档.md》。** 接触审计已闭环：旧数据中的非零接触是负载工况初始化时指尖垫的零力单步接触，修复后 249 个自由运动回合全部零接触且指标复现。调参后 CTC 是当前强基线；1× 原始夹爪下重物/低摩擦失败属于夹持容量限制，1.5× 校准夹爪已确定为论文正式接触实验平台：重物和 0.35 摩擦恢复成功，0.12 摩擦仍是失败边界；1× 原始模型保留为敏感性/失败边界。
 
 # 本地控制实验
 
-本项目先完成数学建模与底层控制验证，再部署云端 VLA。云端环境、LIBERO-Spatial 基线（493/500）和 5 个自定义力矩控制器对照（各 500 回合）已经完成；但控制器对照目前只测任务成功，轨迹级指标和扰动工况仍待补。
+本项目先完成数学建模与底层控制验证，再部署云端 VLA。云端环境、LIBERO-Spatial 的原始 OSC 基线（493/500）已完成；自定义力矩控制器的接入曾因 `env.reset()` 重建控制器而失效，现已修复并验证包装器能跨 reset 存活，但正确的正式批次尚未完成，轨迹级指标和扰动工况也仍待补。
 
 ## 运行
 
@@ -77,7 +77,7 @@ run_local_baseline(0.001, 'local_baseline_dt1ms')
 - `docs/抓取扩展与阶段检测.md`：6 种子扩展、4 s 慢抬升、oracle 对中、夹爪力灵敏度和阶段检测器验证。
 - `docs/夹爪力校准对照报告.md`：1× 原始夹爪与 1.5× 校准夹爪的 90 回合对照、视频和连续指标。
 - `docs/远程LIBERO基线结果.md`：OpenVLA-OFT 在 LIBERO-Spatial 的 500 回合远程基线（493/500，98.6%）及后续 GPU 需求。
-- `docs/远程LIBERO控制器对比结果.md`：OSC + 5 个自定义力矩控制器各 500 回合的对照、逐任务结果、配对 McNemar 检验和“成功率饱和、未检出差异”的边界。
+- `docs/远程LIBERO控制器对比结果.md`：自定义控制器接入 bug 的审计、诊断证据、修复和正确批次状态；原 5×500 批次已撤回。
 - `remote/libero_torque_wrapper.py` / `remote/libero_torque_eval.py`：LIBERO/robosuite 的 CTC/SMC/RBF-SMC 力矩控制器接入与评测入口。
 - `python/controllers.py`：CTC / SMC / RBF-SMC 共享实现。
 - `python/tune_controllers.py` / `python/test_observation_noise.py`：支持 `--out` 的开发与独立测试。

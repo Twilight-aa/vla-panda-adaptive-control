@@ -23,7 +23,9 @@
         "bytes": 127041338,
         "sha256": "30b2b5d7725fa3ef626ebd9100f5c829d7020681eda45f5f7b66ba0d2868b55e"
       }
-    }
+    },
+    "status": "INVALID - actual controller was OSC",
+    "invalid_reason": "robosuite env.reset() rebuilds the robot and its OperationalSpaceController; the original install() replaced env.robots[0].controller only once, so the wrapper was discarded before the first control step of every episode. These five nominal controller runs actually executed OSC and are NOT valid controller results."
   },
   "task_names": [
     "bowl between plate and spice rack",
@@ -106,7 +108,9 @@
         1.0
       ],
       "completed_at": "2026-11-01 01:54 CST",
-      "description": "computed torque control; ctc_kp=900, ctc_kd=66"
+      "description": "computed torque control; ctc_kp=900, ctc_kd=66",
+      "valid": false,
+      "actual_controller": "OSC"
     },
     "SMC": {
       "episodes": 500,
@@ -141,7 +145,9 @@
         1.0
       ],
       "completed_at": "2026-11-01 03:00 CST",
-      "description": "sliding-mode control; lambda=10.44, ks_scale=2.10, rho_scale=1.89, phi=0.144"
+      "description": "sliding-mode control; lambda=10.44, ks_scale=2.10, rho_scale=1.89, phi=0.144",
+      "valid": false,
+      "actual_controller": "OSC"
     },
     "RBF_SMC": {
       "episodes": 500,
@@ -176,7 +182,9 @@
         1.0
       ],
       "completed_at": "2026-11-01 04:06 CST",
-      "description": "RBF adaptive sliding-mode control; lambda=13.62, ks_scale=1.48, rho_scale=1.70, phi=0.214, gamma=11.92"
+      "description": "RBF adaptive sliding-mode control; lambda=13.62, ks_scale=1.48, rho_scale=1.70, phi=0.214, gamma=11.92",
+      "valid": false,
+      "actual_controller": "OSC"
     },
     "RBF_NO_ROBUST": {
       "episodes": 500,
@@ -211,7 +219,9 @@
         1.0
       ],
       "completed_at": "2026-11-01 05:16 CST",
-      "description": "RBF-SMC without the rho*clip(s/phi) robust term; same RBF_SMC config"
+      "description": "RBF-SMC without the rho*clip(s/phi) robust term; same RBF_SMC config",
+      "valid": false,
+      "actual_controller": "OSC"
     },
     "RBF_FROZEN": {
       "episodes": 500,
@@ -246,7 +256,9 @@
         0.94
       ],
       "completed_at": "2026-11-01 06:23 CST",
-      "description": "RBF-SMC with weight updates frozen after 3 s (60 control steps at 20 Hz); same RBF_SMC config"
+      "description": "RBF-SMC with weight updates frozen after 3 s (60 control steps at 20 Hz); same RBF_SMC config",
+      "valid": false,
+      "actual_controller": "OSC"
     }
   },
   "pairwise": {
@@ -337,5 +349,8 @@
       "b_only": 5,
       "p_exact": 0.7744140625
     }
-  }
+  },
+  "valid": false,
+  "actual_controller": "OSC",
+  "invalid_reason": "robosuite env.reset() rebuilds the robot and its OperationalSpaceController; the original install() replaced env.robots[0].controller only once, so the wrapper was discarded before the first control step of every episode. These five nominal controller runs actually executed OSC and are NOT valid controller results."
 }

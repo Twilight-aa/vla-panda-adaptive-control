@@ -7,7 +7,9 @@
       "wilson95": [
         0.9714,
         0.9932
-      ]
+      ],
+      "valid": false,
+      "actual_controller": "OSC"
     },
     "SMC": {
       "episodes": 500,
@@ -16,7 +18,9 @@
       "wilson95": [
         0.9768,
         0.9957
-      ]
+      ],
+      "valid": false,
+      "actual_controller": "OSC"
     },
     "RBF_SMC": {
       "episodes": 500,
@@ -25,7 +29,9 @@
       "wilson95": [
         0.9687,
         0.9919
-      ]
+      ],
+      "valid": false,
+      "actual_controller": "OSC"
     },
     "RBF_NO_ROBUST": {
       "episodes": 500,
@@ -34,7 +40,9 @@
       "wilson95": [
         0.9661,
         0.9905
-      ]
+      ],
+      "valid": false,
+      "actual_controller": "OSC"
     },
     "RBF_FROZEN": {
       "episodes": 500,
@@ -43,7 +51,9 @@
       "wilson95": [
         0.9661,
         0.9905
-      ]
+      ],
+      "valid": false,
+      "actual_controller": "OSC"
     },
     "OSC": {
       "episodes": 500,
@@ -143,5 +153,8 @@
       "b_only": 5,
       "p_exact": 0.7744140625
     }
-  }
+  },
+  "valid": false,
+  "actual_controller": "OSC",
+  "invalid_reason": "robosuite env.reset() rebuilds the robot and its OperationalSpaceController; the original install() replaced env.robots[0].controller only once, so the wrapper was discarded before the first control step of every episode. These five nominal controller runs actually executed OSC and are NOT valid controller results."
 }
